@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papelería De Colores - Todo lo que necesitas para crear</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9a9e, #fecfef, #a8edea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+            100% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-menu a:hover::before {
+            left: 100%;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            padding: 140px 0 100px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="25" cy="10" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23pattern)"/></svg>');
+            animation: float 30s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-100px) translateY(-50px); }
+            100% { transform: translateX(100px) translateY(50px); }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease;
+            background: linear-gradient(45deg, #feca57, #ff9ff3, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 1s ease 0.2s both;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb);
+            background-size: 200% 200%;
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            animation: fadeInUp 1s ease 0.4s both, buttonGlow 2s ease-in-out infinite alternate;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes buttonGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Sections */
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section:nth-child(odd) {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 20%, #ff8a80 40%, #a8edea 60%, #fed6e3 80%, #d299c2 100%);
+        }
+
+        .section:nth-child(even) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #ff6b9d 50%, #c44569 75%, #4ecdc4 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            position: relative;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: titleFloat 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleFloat {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-5px); }
+        }
+
+        .section:nth-child(even) .section-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 5px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #feca57);
+            border-radius: 3px;
+            animation: underlineGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes underlineGlow {
+            0% { box-shadow: 0 0 5px rgba(255,107,107,0.5); }
+            100% { box-shadow: 0 0 15px rgba(255,107,107,0.8); }
+        }
+
+        .section:nth-child(even) .section-title::after {
+            background: linear-gradient(45deg, #feca57, #ff9ff3, #48dbfb);
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .product-card:nth-child(2) {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .product-card:nth-child(3) {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .product-card:nth-child(4) {
+            background: linear-gradient(135deg, #ff8a80 0%, #ff80ab 100%);
+        }
+
+        .product-card:nth-child(5) {
+            background: linear-gradient(135deg, #82b1ff 0%, #b39ddb 100%);
+        }
+
+        .product-card:nth-child(6) {
+            background: linear-gradient(135deg, #69f0ae 0%, #81c784 100%);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #feca57, #ff9ff3);
+            background-size: 400% 400%;
+            border-radius: 20px;
+            z-index: -1;
+            animation: borderGlow 3s ease infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+
+        .product-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 2;
+            animation: iconBounce 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconBounce {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-10px); }
+        }
+
+        .product-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+            position: relative;
+            z-index: 2;
+        }
+
+        .product-card p {
+            color: #34495e;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Services Section */
+        .services {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+            position: relative;
+        }
+
+        .services::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="stars" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="30" cy="30" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="15" r="1.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="60" height="60" fill="url(%23stars)"/></svg>');
+            animation: starsMove 20s linear infinite;
+        }
+
+        @keyframes starsMove {
+            0% { transform: translateX(0px) translateY(0px); }
+            100% { transform: translateX(60px) translateY(60px); }
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .service-item {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .service-item:nth-child(2) {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        .service-item:nth-child(3) {
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        }
+
+        .service-item:nth-child(4) {
+            background: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+        }
+
+        .service-item:nth-child(5) {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+        }
+
+        .service-item:nth-child(6) {
+            background: linear-gradient(135deg, #55efc4 0%, #81ecec 100%);
+        }
+
+        .service-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .service-item:hover::before {
+            left: 100%;
+        }
+
+        .service-item:hover {
+            transform: scale(1.08) rotate(3deg);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: iconPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .service-item h3 {
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-item p {
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+            position: relative;
+        }
+
+        .contact::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="diamonds" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><polygon points="40,10 60,40 40,70 20,40" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="60" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="80" height="80" fill="url(%23diamonds)"/></svg>');
+            animation: diamondsFloat 25s linear infinite;
+        }
+
+        @keyframes diamondsFloat {
+            0% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+            100% { transform: translateX(80px) translateY(80px) rotate(360deg); }
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .contact-info {
+            background: rgba(255,255,255,0.15);
+            padding: 2.5rem;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: rotate 4s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .contact-info h3 {
+            position: relative;
+            z-index: 2;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .contact-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
+            margin-right: 1.5rem;
+            color: #feca57;
+            min-width: 40px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6741 50%, #8e44ad 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
+            animation: footerShine 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes footerShine {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
+        .footer p {
+            position: relative;
+            z-index: 2;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 2.2rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .product-card, .service-item {
+                padding: 2rem;
+            }
+        }
+
+        /* Additional Animations */
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: floatingShapes 15s linear infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 30px;
+            height: 30px;
+            left: 70%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 15px;
+            height: 15px;
+            left: 40%;
+            animation-delay: 4s;
+        }
+
+        @keyframes floatingShapes {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">🌈 De Colores</div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#productos">Productos</a></li>
+                    <li><a href="#servicios">Servicios</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Floating Shapes -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1>¡Dale color a tus ideas!</h1>
+            <p>En Papelería De Colores encontrarás todo lo que necesitas para dar vida a tu creatividad. Materiales de calidad, variedad infinita y los mejores precios de la ciudad.</p>
+            <a href="#productos" class="cta-button">Explora nuestros productos</a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="productos" class="section">
+        <div class="container">
+            <h2 class="section-title">Nuestros Productos</h2>
+            <div class="products-grid">
+                <div class="product-card" onclick="window.location.href='productos/materiales-escolares.html'">
+                    <div class="product-icon">🖍️</div>
+                    <h3>Materiales Escolares</h3>
+                    <p>Cuadernos, lápices, colores, reglas y todo lo necesario para el regreso a clases. Calidad garantizada para estudiantes de todas las edades y niveles educativos.</p>
+                </div>
+                <div class="product-card" onclick="window.location.href='productos/arte-manualidades.html'">
+                    <div class="product-icon">🎨</div>
+                    <h3>Arte y Manualidades</h3>
+                    <p>Pinturas, pinceles, cartulinas, papel crepe, foamy y materiales especiales para dar rienda suelta a tu creatividad artística y proyectos únicos.</p>
+                </div>
+                <div class="product-card" onclick="window.location.href='productos/articulos-oficina.html'">
+                    <div class="product-icon">🏢</div>
+                    <h3>Artículos de Oficina</h3>
+                    <p>Carpetas, clips, grapas, marcadores, papel bond y todo lo indispensable para mantener tu oficina organizada y maximizar tu productividad.</p>
+                </div>
+                <div class="product-card" onclick="window.location.href='productos/regalos-decoracion.html'">
+                    <div class="product-icon">🎁</div>
+                    <h3>Regalos y Decoración</h3>
+                    <p>Papel de regalo, moños, tarjetas, globos y accesorios decorativos para hacer de cada celebración un momento especial e inolvidable.</p>
+                </div>
+                <div class="product-card" onclick="window.location.href='productos/tecnologia-educativa.html'">
+                    <div class="product-icon">💻</div>
+                    <h3>Tecnología Educativa</h3>
+                    <p>Calculadoras, USB, CD-ROM, protectores de pantalla y accesorios tecnológicos para complementar tu educación en la era digital.</p>
+                </div>
+                <div class="product-card" onclick="window.location.href='productos/libros-lectura.html'">
+                    <div class="product-icon">📚</div>
+                    <h3>Libros y Lectura</h3>
+                    <p>Cuentos infantiles, libros educativos, novelas juveniles y material de lectura diverso para fomentar el amor por la literatura.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="servicios" class="section services">
+        <div class="container">
+            <h2 class="section-title">Nuestros Servicios</h2>
+            <div class="services-grid">
+                <div class="service-item">
+                    <div class="service-icon">🖨️</div>
+                    <h3>Impresiones</h3>
+                    <p>Impresión en blanco y negro y a color. Documentos, fotos, pósters y material promocional de alta calidad.</p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">📋</div>
+                    <h3>Fotocopias</h3>
+                    <p>Servicio rápido y económico de fotocopiado para documentos de cualquier tamaño y formato que necesites.</p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">✂️</div>
+                    <h3>Enmicado</h3>
+                    <p>Protege tus documentos importantes con nuestro servicio de enmicado profesional y duradero.</p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">📐</div>
+                    <h3>Cortes Especiales</h3>
+                    <p>Corte de papel, cartón y materiales diversos en las medidas exactas que necesites para tus proyectos.</p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">🏷️</div>
+                    <h3>Personalización</h3>
+                    <p>Personaliza tus cuadernos, carpetas y artículos con nombres y diseños únicos y creativos para darles tu toque personal.</p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">🚚</div>
+                    <h3>Entregas</h3>
+                    <p>Servicio de entrega a domicilio para pedidos grandes y clientes frecuentes en toda la ciudad y alrededores.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contacto" class="section contact">
+        <div class="container">
+            <h2 class="section-title">Contáctanos</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>Información de Contacto</h3>
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div>
+                            <h4>Dirección</h4>
+                            <p>Calle Principal #123, Centro de la Ciudad<br>Ibarra, Imbabura, Ecuador</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📱</div>
+                        <div>
+                            <h4>Teléfono</h4>
+                            <p>+593 99 123 4567<br>+593 98 765 4321</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">✉️</div>
+                        <div>
+                            <h4>Email</h4>
+                            <p>info@papeleriadecolores.com<br>ventas@papeleriadecolores.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">🕒</div>
+                        <div>
+                            <h4>Horarios</h4>
+                            <p>Lun - Vie: 8:00 AM - 7:00 PM<br>
+                               Sáb: 8:00 AM - 6:00 PM<br>
+                               Dom: 9:00 AM - 2:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-info">
+                    <h3>¿Por qué elegir De Colores?</h3>
+                    <div class="contact-item">
+                        <div class="contact-icon">⭐</div>
+                        <div>
+                            <h4>Calidad Garantizada</h4>
+                            <p>Productos de las mejores marcas internacionales con calidad certificada y garantía total de satisfacción.</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">💰</div>
+                        <div>
+                            <h4>Precios Competitivos</h4>
+                            <p>Los mejores precios del mercado sin comprometer jamás la calidad. Descuentos especiales para colegios.</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">🤝</div>
+                        <div>
+                            <h4>Atención Personalizada</h4>
+                            <p>Nuestro equipo experto está siempre dispuesto a asesorarte y ayudarte a encontrar exactamente lo que necesitas.</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📦</div>
+                        <div>
+                            <h4>Gran Variedad</h4>
+                            <p>Más de 1000 productos diferentes siempre disponibles en stock. Si no lo tenemos, lo conseguimos rápidamente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Papelería De Colores. Todos los derechos reservados. 🌈</p>
+            <p>Síguenos en redes sociales para ofertas especiales y novedades exclusivas</p>
+            <p>📱 WhatsApp: +593 99 123 4567 | 🌐 www.papeleriadecolores.com</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Enhanced scroll effect for header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(102, 126, 234, 0.95)';
+                header.style.backdropFilter = 'blur(15px)';
+                header.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+            } else {
+                header.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%)';
+                header.style.backdropFilter = 'blur(10px)';
+                header.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+            }
+        });
+
+        // Enhanced Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0) scale(1)';
+                    
+                    // Add stagger effect for grids
+                    if (entry.target.classList.contains('products-grid') || entry.target.classList.contains('services-grid')) {
+                        const items = entry.target.children;
+                        Array.from(items).forEach((item, index) => {
+                            setTimeout(() => {
+                                item.style.opacity = '1';
+                                item.style.transform = 'translateY(0) scale(1)';
+                            }, index * 150);
+                        });
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.product-card, .service-item, .contact-info, .products-grid, .services-grid').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px) scale(0.9)';
+            el.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            observer.observe(el);
+        });
+
+        // Enhanced interactive effects
+        document.querySelectorAll('.product-card, .service-item').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-15px) scale(1.05)';
+                this.style.zIndex = '10';
+                this.style.cursor = 'pointer';
+                
+                // Add subtle rotation based on mouse position
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    this.style.transform = `translateY(-15px) scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
+                this.style.zIndex = '1';
+            });
+        });
+
+        // Enhanced CTA button effects
+        document.querySelector('.cta-button').addEventListener('click', function(e) {
+            // Create multiple ripple effects
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const ripple = document.createElement('div');
+                    const rect = this.getBoundingClientRect();
+                    const size = 60 + (i * 20);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255,255,255,0.4);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: multiRipple 1s linear;
+                        pointer-events: none;
+                        z-index: 1000;
+                    `;
+                    
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 1000);
+                }, i * 100);
+            }
+        });
+
+        // Parallax effect for sections
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallaxElements = document.querySelectorAll('.hero, .section');
+            
+            parallaxElements.forEach((element, index) => {
+                const speed = 0.5 + (index * 0.1);
+                const yPos = -(scrolled * speed);
+                element.style.backgroundPosition = `center ${yPos}px`;
+            });
+        });
+
+        // Add floating particles effect
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.classList.add('floating-particle');
+            particle.style.cssText = `
+                position: fixed;
+                width: ${Math.random() * 8 + 4}px;
+                height: ${Math.random() * 8 + 4}px;
+                background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #feca57);
+                border-radius: 50%;
+                left: ${Math.random() * 100}vw;
+                top: 100vh;
+                pointer-events: none;
+                z-index: 1;
+                animation: floatUp ${Math.random() * 10 + 10}s linear infinite;
+                opacity: ${Math.random() * 0.5 + 0.2};
+            `;
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 20000);
+        }
+
+        // Generate particles periodically
+        setInterval(createParticle, 2000);
+
+        // Add CSS for additional animations
+        const additionalStyles = document.createElement('style');
+        additionalStyles.textContent = `
+            @keyframes multiRipple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes floatUp {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            .floating-particle {
+                filter: blur(0.5px);
+            }
+        `;
+        document.head.appendChild(additionalStyles);
+
+        // Add text gradient animation
+        const textElements = document.querySelectorAll('.hero h1, .section-title');
+        textElements.forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.backgroundSize = '200% 200%';
+                this.style.animation = 'gradientText 2s ease infinite';
+            });
+        });
+
+        // Add gradient text animation
+        const gradientTextStyle = document.createElement('style');
+        gradientTextStyle.textContent = `
+            @keyframes gradientText {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+        `;
+        document.head.appendChild(gradientTextStyle);
+
+        // Page load animation
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 1s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add dynamic color changing for special elements
+        function changeColors() {
+            const elements = document.querySelectorAll('.contact-icon');
+            elements.forEach(icon => {
+                const colors = ['#ff6b6b', '#4ecdc4', '#feca57', '#ff9ff3', '#48dbfb', '#a29bfe'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                icon.style.color = randomColor;
+            });
+        }
+
+        // Change icon colors every 3 seconds
+        setInterval(changeColors, 3000);
+
+        // Add mobile menu toggle for responsive design
+        const logo = document.querySelector('.logo');
+        let mobileMenuOpen = false;
+
+        logo.addEventListener('click', function() {
+            const navMenu = document.querySelector('.nav-menu');
+            if (window.innerWidth <= 768) {
+                mobileMenuOpen = !mobileMenuOpen;
+                if (mobileMenuOpen) {
+                    navMenu.style.display = 'flex';
+                    navMenu.style.flexDirection = 'column';
+                    navMenu.style.position = 'absolute';
+                    navMenu.style.top = '100%';
+                    navMenu.style.left = '0';
+                    navMenu.style.right = '0';
+                    navMenu.style.background = 'rgba(102, 126, 234, 0.95)';
+                    navMenu.style.padding = '1rem';
+                    navMenu.style.backdropFilter = 'blur(15px)';
+                } else {
+                    navMenu.style.display = 'none';
+                }
+            }
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.nav-menu').style.display = 'none';
+                    mobileMenuOpen = false;
+                }
+            });
+        });
+
+        // Easter egg - Konami code
+        let konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+        let konamiIndex = 0;
+
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    // Activate rainbow mode
+                    document.body.style.filter = 'hue-rotate(0deg)';
+                    let hue = 0;
+                    const rainbowInterval = setInterval(() => {
+                        hue += 10;
+                        document.body.style.filter = `hue-rotate(${hue}deg)`;
+                        if (hue >= 360) {
+                            clearInterval(rainbowInterval);
+                            document.body.style.filter = 'none';
+                        }
+                    }, 100);
+                    konamiIndex = 0;
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
+    </script>
+</body>
+</html>

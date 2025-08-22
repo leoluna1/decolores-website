@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arte y Manualidades - Papelería De Colores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9a9e, #fecfef, #a8edea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoGlow 3s ease-in-out infinite alternate;
+            text-decoration: none;
+            color: white;
+        }
+
+        @keyframes logoGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+            100% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #ff9a9e 100%);
+            padding: 140px 0 80px;
+            text-align: center;
+            color: #2c3e50;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="art-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="3" fill="rgba(255,255,255,0.3)"/><rect x="50" y="10" width="10" height="15" fill="rgba(255,255,255,0.2)"/><polygon points="60,50 70,40 70,60" fill="rgba(255,255,255,0.25)"/></pattern></defs><rect width="80" height="80" fill="url(%23art-pattern)"/></svg>');
+            animation: floatPattern 25s infinite linear;
+        }
+
+        @keyframes floatPattern {
+            0% { transform: translateX(-80px) translateY(-80px) rotate(0deg); }
+            100% { transform: translateX(80px) translateY(80px) rotate(360deg); }
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: iconFloat 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconFloat {
+            0% { transform: translateY(0px) rotate(-10deg); }
+            100% { transform: translateY(-15px) rotate(10deg); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: #34495e;
+            font-weight: 500;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Sections */
+        .section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.5);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 2px;
+        }
+
+        /* Pinturas Section */
+        .pinturas {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+        }
+
+        .pinturas .section-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .pinturas .section-title::after {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+        }
+
+        .pinturas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .pintura-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pintura-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .pintura-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: iconBounce 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconBounce {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .pintura-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .pintura-card p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .price-range {
+            background: rgba(254,202,87,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #feca57;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* Materiales Creativos Section */
+        .creativos {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ff8a80 100%);
+        }
+
+        .creativos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .creativo-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .creativo-card:nth-child(1) {
+            background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%);
+        }
+
+        .creativo-card:nth-child(2) {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .creativo-card:nth-child(3) {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .creativo-card:nth-child(4) {
+            background: linear-gradient(135deg, #ffc9de 0%, #dcd3ff 100%);
+        }
+
+        .creativo-card:hover {
+            transform: translateY(-10px) rotate(3deg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .creativo-icon {
+            font-size: 3.2rem;
+            margin-bottom: 1rem;
+            animation: iconRotate 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconRotate {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
+        }
+
+        .creativo-card h4 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .creativo-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Herramientas Section */
+        .herramientas {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .herramientas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .herramienta-card {
+            background: rgba(255,255,255,0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .herramienta-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .herramienta-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: iconPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .herramienta-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .herramienta-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Proyectos Section */
+        .proyectos {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        }
+
+        .proyectos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .proyecto-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .proyecto-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255,107,107,0.1), transparent);
+            animation: rotate 4s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .proyecto-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .proyecto-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .proyecto-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
+            animation: iconFloat 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconFloat {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-8px); }
+        }
+
+        .proyecto-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+
+        .proyecto-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Kits Section */
+        .kits {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+        }
+
+        .kits .section-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .kits .section-title::after {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+        }
+
+        .kits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .kit-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kit-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .kit-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: iconSpin 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconSpin {
+            0% { transform: rotate(-10deg) scale(1); }
+            100% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        .kit-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .kit-card p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 60px 0;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            text-align: center;
+            color: white;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6741 50%, #8e44ad 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .pinturas-grid, .creativos-grid, .herramientas-grid, .proyectos-grid, .kits-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .pintura-card, .creativo-card, .herramienta-card, .proyecto-card, .kit-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">🌈 De Colores</a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="../index.html">Inicio</a></li>
+                    <li><a href="../index.html#productos">Productos</a></li>
+                    <li><a href="../index.html#servicios">Servicios</a></li>
+                    <li><a href="../index.html#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-icon">🎨</div>
+            <h1 class="fade-in">Arte y Manualidades</h1>
+            <p class="fade-in">Pinturas, pinceles, cartulinas, papel crepe, foamy y materiales especiales para dar rienda suelta a tu creatividad artística y proyectos únicos.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../index.html" class="back-button fade-in">← Volver al Inicio</a>
+                <a href="../catalogo-productos.html" class="back-button fade-in" style="background: linear-gradient(45deg, #4ecdc4, #45b7d1);">Ver Catálogo Completo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pinturas y Colores Section -->
+    <section class="section pinturas">
+        <div class="container">
+            <h2 class="section-title fade-in">🎨 Pinturas y Colores</h2>
+            <div class="pinturas-grid">
+                <div class="pintura-card fade-in">
+                    <div class="pintura-icon">🖌️</div>
+                    <h3>Pinturas Acrílicas</h3>
+                    <p>Pinturas acrílicas de alta calidad en tubos y frascos. Colores vibrantes, secado rápido, ideales para lienzo y papel.</p>
+                    <div class="price-range">$2.75 - $15.50</div>
+                </div>
+                <div class="pintura-card fade-in">
+                    <div class="pintura-icon">💧</div>
+                    <h3>Acuarelas</h3>
+                    <p>Sets de acuarelas profesionales y escolares. Paletas sólidas y líquidas con efectos translúcidos únicos.</p>
+                    <div class="price-range">$4.25 - $28.75</div>
+                </div>
+                <div class="pintura-card fade-in">
+                    <div class="pintura-icon">🌈</div>
+                    <h3>Témperas</h3>
+                    <p>Témperas lavables y no tóxicas. Perfectas para niños y proyectos escolares. Colores brillantes y fácil aplicación.</p>
+                    <div class="price-range">$1.85 - $12.25</div>
+                </div>
+                <div class="pintura-card fade-in">
+                    <div class="pintura-icon">✨</div>
+                    <h3>Pinturas Especiales</h3>
+                    <p>Pinturas metálicas, fluorescentes, con brillantina y efectos especiales para proyectos únicos y llamativos.</p>
+                    <div class="price-range">$3.50 - $18.90</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Materiales Creativos Section -->
+    <section class="section creativos">
+        <div class="container">
+            <h2 class="section-title fade-in">✂️ Materiales Creativos</h2>
+            <div class="creativos-grid">
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">📄</div>
+                    <h4>Papeles Especiales</h4>
+                    <p>Papel crepe, seda, celofán, metalizado y holográfico. Diferentes texturas y colores para manualidades únicas.</p>
+                    <div class="price-range">$0.75 - $5.25</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">🟩</div>
+                    <h4>Foamy y Goma Eva</h4>
+                    <p>Láminas de foamy en todos los colores, texturas y grosores. Con brillantina, estampados y adhesivos.</p>
+                    <div class="price-range">$0.50 - $3.75</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">🎀</div>
+                    <h4>Cintas y Listones</h4>
+                    <p>Cintas de raso, organza, terciopelo y decorativas. Diferentes anchos y colores para acabados perfectos.</p>
+                    <div class="price-range">$1.25 - $8.50</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">⭐</div>
+                    <h4>Elementos Decorativos</h4>
+                    <p>Lentejuelas, botones, perlas, stickers, ojos móviles y accesorios para dar vida a tus creaciones.</p>
+                    <div class="price-range">$0.85 - $12.75</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Herramientas de Arte Section -->
+    <section class="section herramientas">
+        <div class="container">
+            <h2 class="section-title fade-in">🔧 Herramientas de Arte</h2>
+            <div class="herramientas-grid">
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">🖌️</div>
+                    <h4>Pinceles</h4>
+                    <p>Pinceles de diferentes tamaños y formas. Pelo natural y sintético para acuarela, acrílico y óleo.</p>
+                    <div class="price-range">$1.50 - $25.00</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">🎯</div>
+                    <h4>Paletas y Mezcladores</h4>
+                    <p>Paletas de papel, plástico y vidrio. Espátulas y mezcladores para crear colores perfectos.</p>
+                    <div class="price-range">$2.25 - $15.75</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">📐</div>
+                    <h4>Herramientas de Corte</h4>
+                    <p>Tijeras especializadas, cutters, bisturís y herramientas de precisión para cortes perfectos.</p>
+                    <div class="price-range">$3.75 - $22.50</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">🔍</div>
+                    <h4>Accesorios</h4>
+                    <p>Lupas, soportes, caballetes de mesa y organizadores para mantener tu espacio de trabajo perfecto.</p>
+                    <div class="price-range">$5.50 - $45.00</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Proyectos Especiales Section -->
+    <section class="section proyectos">
+        <div class="container">
+            <h2 class="section-title fade-in">🚀 Proyectos Especiales</h2>
+            <div class="proyectos-grid">
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">🏺</div>
+                    <h4>Cerámica y Modelado</h4>
+                    <p>Arcilla, plastilina, masa flexible y herramientas de modelado para esculturas y figuras.</p>
+                    <div class="price-range">$3.25 - $18.50</div>
+                </div>
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">🧵</div>
+                    <h4>Bordado y Costura</h4>
+                    <p>Hilos, agujas, bastidores y telas para proyectos de bordado y costura creativa.</p>
+                    <div class="price-range">$2.75 - $35.75</div>
+                </div>
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">📿</div>
+                    <h4>Bisutería</h4>
+                    <p>Cuentas, alambres, cierres y herramientas para crear collares, pulseras y accesorios únicos.</p>
+                    <div class="price-range">$1.95 - $28.75</div>
+                </div>
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">🎭</div>
+                    <h4>Disfraces y Teatro</h4>
+                    <p>Materiales para crear disfraces, máscaras y elementos teatrales. Plumas, telas y accesorios.</p>
+                    <div class="price-range">$4.50 - $25.00</div>
+                </div>
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">🖼️</div>
+                    <h4>Enmarcado</h4>
+                    <p>Marcos, paspartús, vidrios y materiales para enmarcar y presentar tus obras de arte.</p>
+                    <div class="price-range">$6.75 - $45.50</div>
+                </div>
+                <div class="proyecto-card fade-in">
+                    <div class="proyecto-icon">📸</div>
+                    <h4>Scrapbooking</h4>
+                    <p>Albums, papeles decorativos, stickers y herramientas para preservar recuerdos de forma creativa.</p>
+                    <div class="price-range">$8.25 - $38.90</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kits de Arte Section -->
+    <section class="section kits">
+        <div class="container">
+            <h2 class="section-title fade-in">🎁 Kits de Arte Completos</h2>
+            <div class="kits-grid">
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🎨</div>
+                    <h3>Kit Pintura Básico</h3>
+                    <p>Incluye: 12 témperas, 6 pinceles, paleta, papel para pintura y delantal. Perfecto para iniciar en el arte.</p>
+                    <div class="price-range">$18.75 - $28.50</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">✨</div>
+                    <h3>Kit Manualidades Creativas</h3>
+                    <p>Foamy, cintas, pegamento, tijeras, elementos decorativos y guía de proyectos paso a paso.</p>
+                    <div class="price-range">$25.90 - $42.75</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🏆</div>
+                    <h3>Kit Profesional de Arte</h3>
+                    <p>Pinturas acrílicas, acuarelas, pinceles profesionales, lienzos, paletas y maletín organizador.</p>
+                    <div class="price-range">$85.50 - $125.75</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">👶</div>
+                    <h3>Kit Arte para Niños</h3>
+                    <p>Materiales seguros y lavables: crayones gruesos, témperas, papel grande, delantal y toallitas.</p>
+                    <div class="price-range">$15.25 - $24.90</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tendencias y Técnicas Section -->
+    <section class="section creativos">
+        <div class="container">
+            <h2 class="section-title fade-in">🔥 Tendencias y Técnicas</h2>
+            <div class="creativos-grid">
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">🌸</div>
+                    <h4>Decoupage</h4>
+                    <p>Servilletas decorativas, barnices especiales, pinceles esponja y bases para crear objetos únicos.</p>
+                    <div class="price-range">$3.75 - $22.50</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">🎯</div>
+                    <h4>Técnicas Mixtas</h4>
+                    <p>Materiales para combinar diferentes técnicas: collage, pintura, texturas y elementos 3D.</p>
+                    <div class="price-range">$5.90 - $35.75</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">💎</div>
+                    <h4>Diamond Painting</h4>
+                    <p>Kits completos con lienzos adhesivos, diamantes de resina, herramientas y bandejas organizadoras.</p>
+                    <div class="price-range">$12.50 - $48.90</div>
+                </div>
+                <div class="creativo-card fade-in">
+                    <div class="creativo-icon">🌿</div>
+                    <h4>Arte Ecológico</h4>
+                    <p>Materiales reciclables, pinturas naturales y elementos sostenibles para arte consciente.</p>
+                    <div class="price-range">$4.25 - $28.75</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lienzos y Soportes Section -->
+    <section class="section herramientas">
+        <div class="container">
+            <h2 class="section-title fade-in">🖼️ Lienzos y Soportes</h2>
+            <div class="herramientas-grid">
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">🎨</div>
+                    <h4>Lienzos</h4>
+                    <p>Lienzos pre-estirados, en rollo y boards. Diferentes tamaños y texturas para cada técnica artística.</p>
+                    <div class="price-range">$3.50 - $45.75</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">📋</div>
+                    <h4>Blocks y Papeles</h4>
+                    <p>Papel para acuarela, acrílico, pastel y dibujo. Diferentes gramajes y texturas profesionales.</p>
+                    <div class="price-range">$4.25 - $32.50</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">🎪</div>
+                    <h4>Caballetes</h4>
+                    <p>Caballetes de mesa, de pie y portátiles. Madera y metal, ajustables para diferentes tamaños.</p>
+                    <div class="price-range">$25.00 - $125.75</div>
+                </div>
+                <div class="herramienta-card fade-in">
+                    <div class="herramienta-icon">📏</div>
+                    <h4>Bastidores</h4>
+                    <p>Bastidores para bordado, estiramiento de lienzos y marcos para obras en proceso.</p>
+                    <div class="price-range">$8.50 - $38.90</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promociones Especiales Section -->
+    <section class="section kits">
+        <div class="container">
+            <h2 class="section-title fade-in">🎉 Promociones Especiales Arte 2025</h2>
+            <div class="kits-grid">
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🎨</div>
+                    <h3>Mes del Arte</h3>
+                    <p>20% de descuento en todos los kits de arte. 3x2 en pinceles profesionales. Envío gratis en compras +$40.</p>
+                    <div class="price-range">Marzo - Abril</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">👨‍🎓</div>
+                    <h3>Talleres Gratuitos</h3>
+                    <p>Clases de acuarela, acrílico y manualidades. Incluye materiales básicos. Cupos limitados, reserva ya.</p>
+                    <div class="price-range">Sábados</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🏫</div>
+                    <h3>Instituciones Educativas</h3>
+                    <p>Descuentos especiales para colegios y academias de arte. Paquetes personalizados según necesidades.</p>
+                    <div class="price-range">Todo el año</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2 class="fade-in">¿Listo para crear tu próxima obra maestra?</h2>
+            <p class="fade-in" style="margin: 1rem 0; font-size: 1.2rem;">Visítanos y descubre todos los materiales que necesitas para dar vida a tu creatividad</p>
+            <a href="../index.html#contacto" class="cta-button fade-in">Contactar Ahora 🎨</a>
+            <br><br>
+            <p class="fade-in" style="margin-top: 1rem;">📍 Calle Principal #123, Ibarra - Imbabura | 📱 +593 99 123 4567</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Papelería De Colores. Todos los derechos reservados. 🌈</p>
+            <p>📧 info@papeleriadecolores.com | 🌐 www.papeleriadecolores.com</p>
+            <p><strong>"Despierta al artista que llevas dentro con la mejor selección de materiales de arte en Ibarra"</strong></p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for all links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Enhanced Intersection Observer for staggered animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Add stagger effect for grid items
+                    if (entry.target.classList.contains('pinturas-grid') || 
+                        entry.target.classList.contains('creativos-grid') || 
+                        entry.target.classList.contains('herramientas-grid') || 
+                        entry.target.classList.contains('proyectos-grid') ||
+                        entry.target.classList.contains('kits-grid')) {
+                        
+                        const items = entry.target.children;
+                        Array.from(items).forEach((item, index) => {
+                            setTimeout(() => {
+                                item.style.opacity = '1';
+                                item.style.transform = 'translateY(0) scale(1)';
+                            }, index * 200);
+                        });
+                    } else {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in, .pintura-card, .creativo-card, .herramienta-card, .proyecto-card, .kit-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px) scale(0.95)';
+            el.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            observer.observe(el);
+        });
+
+        // Observe grid containers
+        document.querySelectorAll('.pinturas-grid, .creativos-grid, .herramientas-grid, .proyectos-grid, .kits-grid').forEach(grid => {
+            observer.observe(grid);
+        });
+
+        // Enhanced header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(102, 126, 234, 0.95)';
+                header.style.backdropFilter = 'blur(15px)';
+            } else {
+                header.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%)';
+                header.style.backdropFilter = 'blur(10px)';
+            }
+        });
+
+        // Enhanced interactive effects for all cards
+        document.querySelectorAll('.pintura-card, .creativo-card, .herramienta-card, .proyecto-card, .kit-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-15px) scale(1.05)';
+                this.style.zIndex = '10';
+                
+                // 3D rotation effect based on mouse position
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    this.style.transform = `translateY(-15px) scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
+                this.style.zIndex = '1';
+            });
+        });
+
+        // Enhanced button effects
+        document.querySelectorAll('.back-button, .cta-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Multiple ripple effect
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const ripple = document.createElement('div');
+                        const rect = this.getBoundingClientRect();
+                        const size = 60 + (i * 15);
+                        const x = e.clientX - rect.left - size / 2;
+                        const y = e.clientY - rect.top - size / 2;
+                        
+                        ripple.style.cssText = `
+                            position: absolute;
+                            width: ${size}px;
+                            height: ${size}px;
+                            left: ${x}px;
+                            top: ${y}px;
+                            background: rgba(255,255,255,0.4);
+                            border-radius: 50%;
+                            transform: scale(0);
+                            animation: ripple 1s linear;
+                            pointer-events: none;
+                            z-index: 1000;
+                        `;
+                        
+                        this.appendChild(ripple);
+                        setTimeout(() => ripple.remove(), 1000);
+                    }, i * 100);
+                }
+            });
+        });
+
+        // Add CSS for ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Mobile menu functionality
+        const logo = document.querySelector('.logo');
+        let mobileMenuOpen = false;
+
+        logo.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const navMenu = document.querySelector('.nav-menu');
+                mobileMenuOpen = !mobileMenuOpen;
+                
+                if (mobileMenuOpen) {
+                    navMenu.style.display = 'flex';
+                    navMenu.style.flexDirection = 'column';
+                    navMenu.style.position = 'absolute';
+                    navMenu.style.top = '100%';
+                    navMenu.style.left = '0';
+                    navMenu.style.right = '0';
+                    navMenu.style.background = 'rgba(102, 126, 234, 0.95)';
+                    navMenu.style.padding = '1rem';
+                    navMenu.style.backdropFilter = 'blur(15px)';
+                } else {
+                    navMenu.style.display = 'none';
+                }
+            }
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.nav-menu').style.display = 'none';
+                    mobileMenuOpen = false;
+                }
+            });
+        });
+
+        // Floating art supplies animation
+        function createFloatingArt() {
+            const artSupplies = ['🎨', '🖌️', '✂️', '🖍️', '🎭', '📿', '🌈', '✨', '🎪', '🎯'];
+            const supply = document.createElement('div');
+            supply.textContent = artSupplies[Math.floor(Math.random() * artSupplies.length)];
+            supply.style.cssText = `
+                position: fixed;
+                font-size: ${Math.random() * 25 + 20}px;
+                left: ${Math.random() * 100}vw;
+                top: 100vh;
+                pointer-events: none;
+                z-index: 1;
+                animation: floatUpArt ${Math.random() * 10 + 15}s linear infinite;
+                opacity: ${Math.random() * 0.6 + 0.4};
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            `;
+            
+            document.body.appendChild(supply);
+            
+            setTimeout(() => {
+                supply.remove();
+            }, 25000);
+        }
+
+        // Generate floating art supplies periodically
+        setInterval(createFloatingArt, 2500);
+
+        // Add CSS for floating art animation
+        const floatingStyle = document.createElement('style');
+        floatingStyle.textContent = `
+            @keyframes floatUpArt {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-120vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(floatingStyle);
+
+        // Price range hover effects
+        document.querySelectorAll('.price-range').forEach(price => {
+            price.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.background = 'rgba(254,202,87,0.5)';
+            });
+            
+            price.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.background = 'rgba(254,202,87,0.3)';
+            });
+        });
+
+        // Page load animation
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 1.2s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add dynamic color changing for icons
+        function changeIconColors() {
+            const icons = document.querySelectorAll('.pintura-icon, .creativo-icon, .herramienta-icon, .proyecto-icon, .kit-icon');
+            icons.forEach(icon => {
+                const hue = Math.random() * 360;
+                icon.style.filter = `hue-rotate(${hue}deg) brightness(1.1) saturate(1.2)`;
+            });
+        }
+
+        // Change icon colors every 4 seconds
+        setInterval(changeIconColors, 4000);
+
+        // Parallax effect for hero section
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            const heroContent = document.querySelector('.hero-content');
+            
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            heroContent.style.transform = `translateY(${scrolled * -0.2}px)`;
+        });
+
+        // Add paint splash effect on scroll
+        function createPaintSplash() {
+            const splash = document.createElement('div');
+            splash.style.cssText = `
+                position: fixed;
+                width: ${Math.random() * 60 + 40}px;
+                height: ${Math.random() * 60 + 40}px;
+                background: radial-gradient(circle, 
+                    hsl(${Math.random() * 360}, 70%, 60%) 0%, 
+                    hsl(${Math.random() * 360}, 70%, 60%) 40%, 
+                    transparent 100%);
+                border-radius: ${Math.random() * 50 + 30}% ${Math.random() * 50 + 30}% ${Math.random() * 50 + 30}% ${Math.random() * 50 + 30}%;
+                left: ${Math.random() * 100}vw;
+                top: ${Math.random() * 100}vh;
+                pointer-events: none;
+                z-index: 1;
+                animation: splashFade 3s ease-out forwards;
+                opacity: 0.6;
+            `;
+            
+            document.body.appendChild(splash);
+            
+            setTimeout(() => {
+                splash.remove();
+            }, 3000);
+        }
+
+        // Add splash effect CSS
+        const splashStyle = document.createElement('style');
+        splashStyle.textContent = `
+            @keyframes splashFade {
+                0% {
+                    transform: scale(0) rotate(0deg);
+                    opacity: 0.6;
+                }
+                50% {
+                    transform: scale(1) rotate(180deg);
+                    opacity: 0.8;
+                }
+                100% {
+                    transform: scale(1.5) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(splashStyle);
+
+        // Create paint splashes on scroll
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            if (Math.abs(currentScrollY - lastScrollY) > 100) {
+                createPaintSplash();
+                lastScrollY = currentScrollY;
+            }
+        });
+    </script>
+</body>
+</html>

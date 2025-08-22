@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artículos de Oficina - Papelería De Colores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9a9e, #fecfef, #a8edea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoGlow 3s ease-in-out infinite alternate;
+            text-decoration: none;
+            color: white;
+        }
+
+        @keyframes logoGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+            100% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            padding: 140px 0 80px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="office-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><rect x="10" y="20" width="15" height="2" fill="rgba(255,255,255,0.2)"/><rect x="30" y="15" width="20" height="3" fill="rgba(255,255,255,0.15)"/><circle cx="60" cy="50" r="3" fill="rgba(255,255,255,0.25)"/><rect x="15" y="50" width="10" height="10" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="80" height="80" fill="url(%23office-pattern)"/></svg>');
+            animation: floatPattern 25s infinite linear;
+        }
+
+        @keyframes floatPattern {
+            0% { transform: translateX(-80px) translateY(-80px) rotate(0deg); }
+            100% { transform: translateX(80px) translateY(80px) rotate(360deg); }
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: iconFloat 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconFloat {
+            0% { transform: translateY(0px) rotate(-10deg); }
+            100% { transform: translateY(-15px) rotate(10deg); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            opacity: 0.95;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Sections */
+        .section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.5);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 2px;
+        }
+
+        /* Escritura Profesional Section */
+        .escritura {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+        }
+
+        .escritura .section-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .escritura .section-title::after {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+        }
+
+        .escritura-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .escritura-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .escritura-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .escritura-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: iconBounce 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconBounce {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .escritura-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .escritura-card p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .price-range {
+            background: rgba(254,202,87,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #feca57;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* Papel y Documentos Section */
+        .papel {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ff8a80 100%);
+        }
+
+        .papel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .papel-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .papel-card:nth-child(1) {
+            background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%);
+        }
+
+        .papel-card:nth-child(2) {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .papel-card:nth-child(3) {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .papel-card:nth-child(4) {
+            background: linear-gradient(135deg, #ffc9de 0%, #dcd3ff 100%);
+        }
+
+        .papel-card:hover {
+            transform: translateY(-10px) rotate(3deg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .papel-icon {
+            font-size: 3.2rem;
+            margin-bottom: 1rem;
+            animation: iconRotate 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconRotate {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
+        }
+
+        .papel-card h4 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .papel-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Organización Section */
+        .organizacion {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .organizacion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .organizacion-card {
+            background: rgba(255,255,255,0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .organizacion-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .organizacion-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: iconPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .organizacion-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .organizacion-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Tecnología de Oficina Section */
+        .tecnologia {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        }
+
+        .tecnologia-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .tecnologia-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tecnologia-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(255,107,107,0.1), transparent);
+            animation: rotate 4s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tecnologia-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .tecnologia-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .tecnologia-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
+            animation: iconFloat 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconFloat {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-8px); }
+        }
+
+        .tecnologia-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tecnologia-card p {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Kits Section */
+        .kits {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
+            color: white;
+        }
+
+        .kits .section-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .kits .section-title::after {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+        }
+
+        .kits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .kit-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kit-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .kit-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: iconSpin 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes iconSpin {
+            0% { transform: rotate(-10deg) scale(1); }
+            100% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        .kit-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .kit-card p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 60px 0;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            text-align: center;
+            color: white;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6741 50%, #8e44ad 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .escritura-grid, .papel-grid, .organizacion-grid, .tecnologia-grid, .kits-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .escritura-card, .papel-card, .organizacion-card, .tecnologia-card, .kit-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">🌈 De Colores</a>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="../index.html">Inicio</a></li>
+                    <li><a href="../index.html#productos">Productos</a></li>
+                    <li><a href="../index.html#servicios">Servicios</a></li>
+                    <li><a href="../index.html#contacto">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-icon">🏢</div>
+            <h1 class="fade-in">Artículos de Oficina</h1>
+            <p class="fade-in">Bolígrafos, carpetas, papel bond y todo lo indispensable para mantener tu oficina organizada y maximizar tu productividad profesional.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../index.html" class="back-button fade-in">← Volver al Inicio</a>
+                <a href="../catalogo-productos.html" class="back-button fade-in" style="background: linear-gradient(45deg, #4ecdc4, #45b7d1);">Ver Catálogo Completo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Escritura Profesional Section -->
+    <section class="section escritura">
+        <div class="container">
+            <h2 class="section-title fade-in">🖊️ Escritura Profesional</h2>
+            <div class="escritura-grid">
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🖊️</div>
+                    <h3>Bolígrafos Premium</h3>
+                    <p>Bolígrafos ejecutivos, multicolor y gel. Marcas BIC, Pilot, Parker. Tinta suave, trazo perfecto para documentos importantes.</p>
+                    <div class="price-range">$0.75 - $18.50</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🖋️</div>
+                    <h3>Plumas Ejecutivas</h3>
+                    <p>Plumas estilográficas y roller para firma de documentos. Presentación elegante, ideal para ejecutivos y profesionales.</p>
+                    <div class="price-range">$12.75 - $85.00</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🖍️</div>
+                    <h3>Marcadores y Resaltadores</h3>
+                    <p>Marcadores permanentes, resaltadores fluorescentes, marcadores para pizarra. Colores vibrantes, larga duración.</p>
+                    <div class="price-range">$1.50 - $12.25</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">✏️</div>
+                    <h3>Lápices Técnicos</h3>
+                    <p>Portaminas 0.5mm, 0.7mm, 0.9mm. Lápices técnicos para dibujo profesional y documentación técnica.</p>
+                    <div class="price-range">$2.25 - $25.75</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Papel y Documentos Section -->
+    <section class="section papel">
+        <div class="container">
+            <h2 class="section-title fade-in">📄 Papel y Documentos</h2>
+            <div class="papel-grid">
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">📄</div>
+                    <h4>Papel Bond Premium</h4>
+                    <p>Hojas A4 de 75g, 80g y 90g. Extra blanco, excelente calidad de impresión. Paquetes de 500 hojas, ideal para oficinas.</p>
+                    <div class="price-range">$4.75 - $8.50</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">📃</div>
+                    <h4>Papel Membretado</h4>
+                    <p>Papel con logotipo personalizado, papel de carta corporativo. Diferentes gramajes y acabados para imagen profesional.</p>
+                    <div class="price-range">$8.25 - $25.00</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">📊</div>
+                    <h4>Formularios y Facturas</h4>
+                    <p>Facturas autocopiativas, recibos, formularios personalizados. Impresión carbonada, numeración consecutiva.</p>
+                    <div class="price-range">$15.50 - $45.75</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">🏷️</div>
+                    <h4>Etiquetas Adhesivas</h4>
+                    <p>Etiquetas para archivo, direcciones, códigos de barras. Diferentes tamaños, adhesivo permanente y removible.</p>
+                    <div class="price-range">$2.75 - $18.90</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Organización Section -->
+    <section class="section organizacion">
+        <div class="container">
+            <h2 class="section-title fade-in">📁 Organización y Archivo</h2>
+            <div class="organizacion-grid">
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">📁</div>
+                    <h4>Carpetas y Archivadores</h4>
+                    <p>Carpetas colgantes, archivadores de palanca, carpetas de argollas. Tamaño oficio y carta, diferentes colores.</p>
+                    <div class="price-range">$3.25 - $28.75</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">📋</div>
+                    <h4>Portapapeles y Bandejas</h4>
+                    <p>Portapapeles metálicos y acrílicos, bandejas apilables para documentos. Organización eficiente del escritorio.</p>
+                    <div class="price-range">$4.50 - $22.50</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">🗂️</div>
+                    <h4>Separadores y Índices</h4>
+                    <p>Separadores alfabéticos, numéricos y temáticos. Pestañas de colores, material resistente para uso intensivo.</p>
+                    <div class="price-range">$2.85 - $15.75</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">📦</div>
+                    <h4>Cajas de Archivo</h4>
+                    <p>Cajas de archivo definitivo, cajas de transferencia. Cartón resistente, fácil armado y rotulación.</p>
+                    <div class="price-range">$5.75 - $12.25</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">🗃️</div>
+                    <h4>Ficheros y Tarjeteros</h4>
+                    <p>Ficheros metálicos, tarjeteros de mesa. Diferentes capacidades para organización de contactos y referencias.</p>
+                    <div class="price-range">$18.50 - $65.75</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">📌</div>
+                    <h4>Accesorios de Escritorio</h4>
+                    <p>Clips, chinches, ligas, broches. Organizadores de escritorio, porta clips magnéticos y dispensadores.</p>
+                    <div class="price-range">$1.25 - $35.50</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tecnología de Oficina Section -->
+    <section class="section tecnologia">
+        <div class="container">
+            <h2 class="section-title fade-in">💻 Tecnología de Oficina</h2>
+            <div class="tecnologia-grid">
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">🖨️</div>
+                    <h4>Equipos de Impresión</h4>
+                    <p>Cartuchos de tinta, tóner, papel fotográfico. Suministros para impresoras láser e inyección de tinta de todas las marcas.</p>
+                    <div class="price-range">$15.75 - $125.50</div>
+                </div>
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">🔢</div>
+                    <h4>Calculadoras Profesionales</h4>
+                    <p>Calculadoras científicas, financieras y de escritorio. Pantalla grande, funciones avanzadas para contabilidad.</p>
+                    <div class="price-range">$12.25 - $185.75</div>
+                </div>
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">💾</div>
+                    <h4>Almacenamiento Digital</h4>
+                    <p>USB profesionales, discos duros externos, memorias SD. Alta capacidad y velocidad para respaldo de datos.</p>
+                    <div class="price-range">$8.50 - $95.25</div>
+                </div>
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">🔌</div>
+                    <h4>Accesorios Tecnológicos</h4>
+                    <p>Cables USB, adaptadores, cargadores, extensiones. Protectores de voltaje y regletas para equipos de oficina.</p>
+                    <div class="price-range">$5.75 - $75.00</div>
+                </div>
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">🖱️</div>
+                    <h4>Periféricos de Computadora</h4>
+                    <p>Mouse ópticos e inalámbricos, teclados, webcams, audífonos. Ergonómicos para uso prolongado en oficina.</p>
+                    <div class="price-range">$8.75 - $85.50</div>
+                </div>
+                <div class="tecnologia-card fade-in">
+                    <div class="tecnologia-icon">📱</div>
+                    <h4>Comunicación</h4>
+                    <p>Teléfonos de escritorio, intercomunicadores, accesorios para celulares. Bases y soportes para dispositivos móviles.</p>
+                    <div class="price-range">$15.25 - $125.75</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobiliario y Ergonomía Section -->
+    <section class="section escritura">
+        <div class="container">
+            <h2 class="section-title fade-in">🪑 Mobiliario y Ergonomía</h2>
+            <div class="escritura-grid">
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🪑</div>
+                    <h3>Sillas de Oficina</h3>
+                    <p>Sillas ejecutivas, ergonómicas y secretariales. Respaldo ajustable, brazos acolchados, base de 5 ruedas para máximo confort.</p>
+                    <div class="price-range">$85.00 - $350.75</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🗄️</div>
+                    <h3>Escritorios y Mesas</h3>
+                    <p>Escritorios ejecutivos, mesas de juntas, escritorios modulares. Diferentes tamaños y acabados en madera y metal.</p>
+                    <div class="price-range">$125.50 - $850.00</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">🗃️</div>
+                    <h3>Archiveros y Estanterías</h3>
+                    <p>Archiveros metálicos de 2, 3 y 4 gavetas. Estanterías modulares, libreros ejecutivos para organización total.</p>
+                    <div class="price-range">$95.75 - $425.00</div>
+                </div>
+                <div class="escritura-card fade-in">
+                    <div class="escritura-icon">💡</div>
+                    <h3>Iluminación</h3>
+                    <p>Lámparas de escritorio LED, lámparas de techo para oficina. Iluminación eficiente y ergonómica para reducir fatiga visual.</p>
+                    <div class="price-range">$25.75 - $185.50</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kits de Oficina Section -->
+    <section class="section kits">
+        <div class="container">
+            <h2 class="section-title fade-in">💼 Kits de Oficina Completos</h2>
+            <div class="kits-grid">
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">💼</div>
+                    <h3>Kit Ejecutivo Básico</h3>
+                    <p>10 bolígrafos premium, 2 marcadores, resaltadores, clips, grapadora, perforadora, calculadora básica y porta-clips elegante.</p>
+                    <div class="price-range">$35.75 - $48.50</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🏢</div>
+                    <h3>Kit Oficina Completa</h3>
+                    <p>Papel bond 500 hojas, carpetas, archivadores, grapadora industrial, perforadora, calculadora científica, organizadores.</p>
+                    <div class="price-range">$85.25 - $125.75</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">👔</div>
+                    <h3>Kit Gerencial Premium</h3>
+                    <p>Pluma ejecutiva, agenda de cuero, portadocumentos, calculadora financiera, set de escritorio premium, tarjetero.</p>
+                    <div class="price-range">$185.50 - $285.00</div>
+                </div>
+                <div class="kit-card fade-in">
+                    <div class="kit-icon">🏭</div>
+                    <h3>Kit Empresarial</h3>
+                    <p>Suministros para 20 empleados: papel, bolígrafos, carpetas, formularios, etiquetas, grapadoras, perforadoras y organizadores.</p>
+                    <div class="price-range">$485.75 - $750.00</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios Especializados Section -->
+    <section class="section papel">
+        <div class="container">
+            <h2 class="section-title fade-in">⚙️ Servicios Especializados</h2>
+            <div class="papel-grid">
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">🖨️</div>
+                    <h4>Impresión Corporativa</h4>
+                    <p>Tarjetas de presentación, papel membretado, facturas personalizadas. Diseño e impresión de material corporativo.</p>
+                    <div class="price-range">Por cotización</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">📋</div>
+                    <h4>Encuadernación</h4>
+                    <p>Encuadernación espiral, térmica y con grapas. Anillado, empastado y acabados profesionales para documentos.</p>
+                    <div class="price-range">$2.50 - $25.00</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">🏷️</div>
+                    <h4>Etiquetado Personalizado</h4>
+                    <p>Etiquetas con logo, códigos de barras, etiquetas de inventario. Diferentes materiales y acabados disponibles.</p>
+                    <div class="price-range">$15.75 - $85.50</div>
+                </div>
+                <div class="papel-card fade-in">
+                    <div class="papel-icon">📦</div>
+                    <h4>Organización de Archivo</h4>
+                    <p>Consultoría en organización documental, sistemas de archivo, rotulación y codificación de documentos empresariales.</p>
+                    <div class="price-range">Por cotización</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promociones Empresariales Section -->
+    <section class="section organizacion">
+        <div class="container">
+            <h2 class="section-title fade-in">🎯 Promociones Empresariales 2025</h2>
+            <div class="organizacion-grid">
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">💼</div>
+                    <h4>Descuento Corporativo</h4>
+                    <p>15% de descuento en compras mayores a $200. Crédito empresarial a 30 días. Entrega gratuita en Ibarra.</p>
+                    <div class="price-range">Todo el año</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">📅</div>
+                    <h4>Plan Mensual Oficina</h4>
+                    <p>Suministros mensuales automáticos: papel, tinta, artículos básicos. Facturación mensual, servicio personalizado.</p>
+                    <div class="price-range">Desde $75/mes</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">🎁</div>
+                    <h4>Bienvenida Empresarial</h4>
+                    <p>Kit de bienvenida GRATIS para nuevas empresas: agenda, bolígrafos personalizados, calculadora y porta-clips.</p>
+                    <div class="price-range">Nuevos clientes</div>
+                </div>
+                <div class="organizacion-card fade-in">
+                    <div class="organizacion-icon">⚡</div>
+                    <h4>Servicio Express</h4>
+                    <p>Entrega el mismo día en Ibarra para pedidos antes de las 2:00 PM. Servicio de urgencia para empresas.</p>
+                    <div class="price-range">$5.00 adicional</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2 class="fade-in">¿Necesitas equipar tu oficina completa?</h2>
+            <p class="fade-in" style="margin: 1rem 0; font-size: 1.2rem;">Contáctanos para una cotización personalizada y asesoría profesional en suministros de oficina</p>
+            <a href="../index.html#contacto" class="cta-button fade-in">Cotizar Ahora 💼</a>
+            <br><br>
+            <p class="fade-in" style="margin-top: 1rem;">📍 Calle Principal #123, Ibarra - Imbabura | 📱 +593 99 123 4567</p>
+            <p class="fade-in" style="margin-top: 0.5rem;">💼 Atención empresarial: Lun-Vie 8:00 AM - 6:00 PM</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Papelería De Colores. Todos los derechos reservados. 🌈</p>
+            <p>📧 empresas@papeleriadecolores.com | 🌐 www.papeleriadecolores.com</p>
+            <p><strong>"Potencia tu productividad con los mejores suministros de oficina en Ibarra"</strong></p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for all links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Enhanced Intersection Observer for staggered animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Add stagger effect for grid items
+                    if (entry.target.classList.contains('escritura-grid') || 
+                        entry.target.classList.contains('papel-grid') || 
+                        entry.target.classList.contains('organizacion-grid') || 
+                        entry.target.classList.contains('tecnologia-grid') ||
+                        entry.target.classList.contains('kits-grid')) {
+                        
+                        const items = entry.target.children;
+                        Array.from(items).forEach((item, index) => {
+                            setTimeout(() => {
+                                item.style.opacity = '1';
+                                item.style.transform = 'translateY(0) scale(1)';
+                            }, index * 200);
+                        });
+                    } else {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in, .escritura-card, .papel-card, .organizacion-card, .tecnologia-card, .kit-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px) scale(0.95)';
+            el.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            observer.observe(el);
+        });
+
+        // Observe grid containers
+        document.querySelectorAll('.escritura-grid, .papel-grid, .organizacion-grid, .tecnologia-grid, .kits-grid').forEach(grid => {
+            observer.observe(grid);
+        });
+
+        // Enhanced header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(102, 126, 234, 0.95)';
+                header.style.backdropFilter = 'blur(15px)';
+            } else {
+                header.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%)';
+                header.style.backdropFilter = 'blur(10px)';
+            }
+        });
+
+        // Enhanced interactive effects for all cards
+        document.querySelectorAll('.escritura-card, .papel-card, .organizacion-card, .tecnologia-card, .kit-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-15px) scale(1.05)';
+                this.style.zIndex = '10';
+                
+                // 3D rotation effect based on mouse position
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    this.style.transform = `translateY(-15px) scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
+                this.style.zIndex = '1';
+            });
+        });
+
+        // Enhanced button effects
+        document.querySelectorAll('.back-button, .cta-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Multiple ripple effect
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const ripple = document.createElement('div');
+                        const rect = this.getBoundingClientRect();
+                        const size = 60 + (i * 15);
+                        const x = e.clientX - rect.left - size / 2;
+                        const y = e.clientY - rect.top - size / 2;
+                        
+                        ripple.style.cssText = `
+                            position: absolute;
+                            width: ${size}px;
+                            height: ${size}px;
+                            left: ${x}px;
+                            top: ${y}px;
+                            background: rgba(255,255,255,0.4);
+                            border-radius: 50%;
+                            transform: scale(0);
+                            animation: ripple 1s linear;
+                            pointer-events: none;
+                            z-index: 1000;
+                        `;
+                        
+                        this.appendChild(ripple);
+                        setTimeout(() => ripple.remove(), 1000);
+                    }, i * 100);
+                }
+            });
+        });
+
+        // Add CSS for ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Mobile menu functionality
+        const logo = document.querySelector('.logo');
+        let mobileMenuOpen = false;
+
+        logo.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const navMenu = document.querySelector('.nav-menu');
+                mobileMenuOpen = !mobileMenuOpen;
+                
+                if (mobileMenuOpen) {
+                    navMenu.style.display = 'flex';
+                    navMenu.style.flexDirection = 'column';
+                    navMenu.style.position = 'absolute';
+                    navMenu.style.top = '100%';
+                    navMenu.style.left = '0';
+                    navMenu.style.right = '0';
+                    navMenu.style.background = 'rgba(102, 126, 234, 0.95)';
+                    navMenu.style.padding = '1rem';
+                    navMenu.style.backdropFilter = 'blur(15px)';
+                } else {
+                    navMenu.style.display = 'none';
+                }
+            }
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.nav-menu').style.display = 'none';
+                    mobileMenuOpen = false;
+                }
+            });
+        });
+
+        // Floating office supplies animation
+        function createFloatingOffice() {
+            const officeItems = ['💼', '📊', '📋', '🖊️', '📁', '🖨️', '📱', '💻', '📞', '🗃️'];
+            const item = document.createElement('div');
+            item.textContent = officeItems[Math.floor(Math.random() * officeItems.length)];
+            item.style.cssText = `
+                position: fixed;
+                font-size: ${Math.random() * 25 + 20}px;
+                left: ${Math.random() * 100}vw;
+                top: 100vh;
+                pointer-events: none;
+                z-index: 1;
+                animation: floatUpOffice ${Math.random() * 10 + 15}s linear infinite;
+                opacity: ${Math.random() * 0.6 + 0.4};
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            `;
+            
+            document.body.appendChild(item);
+            
+            setTimeout(() => {
+                item.remove();
+            }, 25000);
+        }
+
+        // Generate floating office items periodically
+        setInterval(createFloatingOffice, 3000);
+
+        // Add CSS for floating office animation
+        const floatingStyle = document.createElement('style');
+        floatingStyle.textContent = `
+            @keyframes floatUpOffice {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-120vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(floatingStyle);
+
+        // Price range hover effects
+        document.querySelectorAll('.price-range').forEach(price => {
+            price.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.background = 'rgba(254,202,87,0.5)';
+            });
+            
+            price.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.background = 'rgba(254,202,87,0.3)';
+            });
+        });
+
+        // Page load animation
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 1.2s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add dynamic color changing for icons
+        function changeIconColors() {
+            const icons = document.querySelectorAll('.escritura-icon, .papel-icon, .organizacion-icon, .tecnologia-icon, .kit-icon');
+            icons.forEach(icon => {
+                const hue = Math.random() * 360;
+                icon.style.filter = `hue-rotate(${hue}deg) brightness(1.1) saturate(1.2)`;
+            });
+        }
+
+        // Change icon colors every 4 seconds
+        setInterval(changeIconColors, 4000);
+
+        // Parallax effect for hero section
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            const heroContent = document.querySelector('.hero-content');
+            
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            heroContent.style.transform = `translateY(${scrolled * -0.2}px)`;
+        });
+
+        // Add professional sparkle effect on scroll
+        function createProfessionalSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.style.cssText = `
+                position: fixed;
+                width: ${Math.random() * 30 + 20}px;
+                height: ${Math.random() * 30 + 20}px;
+                background: radial-gradient(circle, 
+                    rgba(102, 126, 234, 0.8) 0%, 
+                    rgba(116, 75, 162, 0.6) 40%, 
+                    transparent 100%);
+                border-radius: 50%;
+                left: ${Math.random() * 100}vw;
+                top: ${Math.random() * 100}vh;
+                pointer-events: none;
+                z-index: 1;
+                animation: sparkleFade 2.5s ease-out forwards;
+                opacity: 0.7;
+            `;
+            
+            document.body.appendChild(sparkle);
+            
+            setTimeout(() => {
+                sparkle.remove();
+            }, 2500);
+        }
+
+        // Add sparkle effect CSS
+        const sparkleStyle = document.createElement('style');
+        sparkleStyle.textContent = `
+            @keyframes sparkleFade {
+                0% {
+                    transform: scale(0) rotate(0deg);
+                    opacity: 0.7;
+                }
+                50% {
+                    transform: scale(1) rotate(180deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: scale(1.5) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(sparkleStyle);
+
+        // Create sparkles on scroll
+        let lastOfficeScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            if (Math.abs(currentScrollY - lastOfficeScrollY) > 150) {
+                createProfessionalSparkle();
+                lastOfficeScrollY = currentScrollY;
+            }
+        });
+    </script>
+</body>
+</html>
