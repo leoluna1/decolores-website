@@ -47,7 +47,7 @@ Funciones actuales del admin:
 
 - Crear y editar productos.
 - Ocultar o activar productos.
-- Subir imagenes JPG, PNG, WebP o GIF hasta 3MB.
+- Subir imagenes JPG, PNG, WebP o GIF hasta 3MB, con eliminacion automatica de fondo blanco para JPG, PNG y WebP.
 - Filtrar inventario por busqueda, categoria, activos, ocultos y bajo stock.
 - Importar productos desde CSV simple.
 - Guardar un link CSV externo y sincronizar productos desde ese link.
@@ -73,6 +73,18 @@ Opciones de configuracion:
 - Para sincronizar cada cierto tiempo: `PRODUCT_CSV_SYNC_INTERVAL_MINUTES=30` o el intervalo que prefieras.
 
 Para Google Sheets, comparte la hoja como publica o publicada en la web. Puedes pegar el link normal de la hoja; el servidor lo convierte al formato CSV cuando detecta `docs.google.com/spreadsheets`.
+
+### Imagenes de productos
+
+Al subir una imagen desde el admin, la opcion `Quitar fondo blanco automaticamente al subir` viene activada. El servidor detecta el fondo blanco conectado a los bordes de la foto, lo convierte en transparencia y guarda el resultado como PNG.
+
+Si el producto es blanco o el fondo forma parte de la foto, desactiva esa opcion antes de subirla.
+
+Variables opcionales:
+
+- `UPLOAD_REMOVE_WHITE_BG=0` desactiva la eliminacion automatica por defecto.
+- `UPLOAD_WHITE_BG_THRESHOLD=245` ajusta que tan blanco debe ser el fondo.
+- `UPLOAD_WHITE_BG_TOLERANCE=24` ajusta cuanta variacion de tono acepta el detector.
 
 ### Publicar
 

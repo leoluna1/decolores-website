@@ -43,6 +43,7 @@ const nodes = {
     importText: document.querySelector('[data-import-text]'),
     importMessage: document.querySelector('[data-import-message]'),
     imageFile: document.querySelector('[data-image-file]'),
+    removeBg: document.querySelector('[data-remove-bg]'),
     imagePreview: document.querySelector('[data-image-preview]')
 };
 
@@ -521,6 +522,7 @@ async function uploadImage() {
 
     const formData = new FormData();
     formData.append('image', file);
+    formData.append('removeBackground', nodes.removeBg.checked ? '1' : '0');
     setMessage(nodes.productMessage, 'Subiendo imagen...');
 
     try {
@@ -532,7 +534,8 @@ async function uploadImage() {
         if (!response.ok) throw new Error(data.error || 'No se pudo subir la imagen.');
         nodes.productForm.image.value = data.path;
         updateImagePreview(data.path);
-        setMessage(nodes.productMessage, 'Imagen subida. Guarda el producto para aplicar el cambio.');
+        const detail = data.backgroundRemoved ? ' Fondo blanco removido.' : '';
+        setMessage(nodes.productMessage, `Imagen subida.${detail} Guarda el producto para aplicar el cambio.`);
     } catch (error) {
         setMessage(nodes.productMessage, error.message, true);
         nodes.imageFile.value = '';

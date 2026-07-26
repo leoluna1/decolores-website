@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
+const sharp = require('sharp');
 const { DatabaseSync } = require('node:sqlite');
 
 const app = express();
@@ -18,6 +19,9 @@ const SESSION_COOKIE = 'decolores_admin';
 const PRODUCT_CSV_URL = clean(process.env.PRODUCT_CSV_URL, 1000);
 const PRODUCT_CSV_SYNC_ON_START = process.env.PRODUCT_CSV_SYNC_ON_START === '1';
 const PRODUCT_CSV_SYNC_INTERVAL_MINUTES = Number(process.env.PRODUCT_CSV_SYNC_INTERVAL_MINUTES || 0);
+const UPLOAD_REMOVE_WHITE_BG = process.env.UPLOAD_REMOVE_WHITE_BG !== '0';
+const UPLOAD_WHITE_BG_THRESHOLD = clampNumber(process.env.UPLOAD_WHITE_BG_THRESHOLD, 220, 255, 245);
+const UPLOAD_WHITE_BG_TOLERANCE = clampNumber(process.env.UPLOAD_WHITE_BG_TOLERANCE, 0, 80, 24);
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -26,13 +30,7 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 
 const upload = multer({
-    storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-        filename: (req, file, cb) => {
-            const ext = safeImageExtension(file);
-            cb(null, `${Date.now()}-${crypto.randomUUID()}${ext}`);
-        }
-    }),
+    storage: multer.memoryStorage(),
     limits: { fileSize: 3 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (!safeImageExtension(file)) return cb(new Error('Solo se permiten imagenes JPG, PNG, WebP o GIF.'));
@@ -173,15 +171,18 @@ app.post('/api/products/sync-csv', requireAdmin, async (req, res) => {
 });
 
 app.post('/api/uploads/products', requireAdmin, (req, res) => {
-    upload.single('image')(req, res, error => {
+    upload.single('image')(req, res, async error => {
         if (error) return res.status(400).json({ error: error.message });
         if (!req.file) return res.status(400).json({ error: 'Selecciona una imagen.' });
 
-        res.status(201).json({
-            path: `uploads/products/${req.file.filename}`,
-            filename: req.file.filename,
-            size: req.file.size
-        });
+        try {
+            const result = await saveUploadedProductImage(req.file, {
+                removeWhiteBackground: UPLOAD_REMOVE_WHITE_BG && req.body.removeBackground !== '0'
+            });
+            res.status(201).json(result);
+        } catch (saveError) {
+            res.status(400).json({ error: saveError.message });
+        }
     });
 });
 
@@ -680,6 +681,117 @@ function uniqueId(base, options = {}) {
 
 function truthy(value) {
     return value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'true' || String(value).toLowerCase() === 'si';
+}
+
+function clampNumber(value, min, max, fallback) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return Math.min(max, Math.max(min, number));
+}
+
+async function saveUploadedProductImage(file, options = {}) {
+    const originalExt = safeImageExtension(file);
+    if (!originalExt || !file.buffer) throw new Error('Imagen invalida.');
+
+    let buffer = file.buffer;
+    let extension = originalExt;
+    let backgroundRemoved = false;
+    let removedPixels = 0;
+
+    if (options.removeWhiteBackground && file.mimetype !== 'image/gif') {
+        const result = await removeWhiteConnectedBackground(file.buffer);
+        if (result.removedPixels > 0) {
+            buffer = result.buffer;
+            extension = '.png';
+            backgroundRemoved = true;
+            removedPixels = result.removedPixels;
+        }
+    }
+
+    const filename = `${Date.now()}-${crypto.randomUUID()}${extension}`;
+    await fs.promises.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+
+    return {
+        path: `uploads/products/${filename}`,
+        filename,
+        size: buffer.length,
+        backgroundRemoved,
+        removedPixels
+    };
+}
+
+async function removeWhiteConnectedBackground(inputBuffer) {
+    const image = sharp(inputBuffer, { limitInputPixels: 25000000 }).rotate().ensureAlpha();
+    const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+    const { width, height, channels } = info;
+    const pixelCount = width * height;
+    const visited = new Uint8Array(pixelCount);
+    const queue = new Uint32Array(pixelCount);
+    let head = 0;
+    let tail = 0;
+
+    const isWhiteCandidate = pixel => {
+        const offset = pixel * channels;
+        const alpha = data[offset + 3];
+        if (alpha <= 12) return false;
+
+        const red = data[offset];
+        const green = data[offset + 1];
+        const blue = data[offset + 2];
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        return red >= UPLOAD_WHITE_BG_THRESHOLD
+            && green >= UPLOAD_WHITE_BG_THRESHOLD
+            && blue >= UPLOAD_WHITE_BG_THRESHOLD
+            && max - min <= UPLOAD_WHITE_BG_TOLERANCE;
+    };
+
+    const enqueue = pixel => {
+        if (visited[pixel] || !isWhiteCandidate(pixel)) return;
+        visited[pixel] = 1;
+        queue[tail] = pixel;
+        tail += 1;
+    };
+
+    for (let x = 0; x < width; x += 1) {
+        enqueue(x);
+        enqueue((height - 1) * width + x);
+    }
+
+    for (let y = 1; y < height - 1; y += 1) {
+        enqueue(y * width);
+        enqueue(y * width + width - 1);
+    }
+
+    let removedPixels = 0;
+    while (head < tail) {
+        const pixel = queue[head];
+        head += 1;
+
+        const offset = pixel * channels;
+        data[offset] = 0;
+        data[offset + 1] = 0;
+        data[offset + 2] = 0;
+        data[offset + 3] = 0;
+        removedPixels += 1;
+
+        const x = pixel % width;
+        if (pixel >= width) enqueue(pixel - width);
+        if (pixel < pixelCount - width) enqueue(pixel + width);
+        if (x > 0) enqueue(pixel - 1);
+        if (x < width - 1) enqueue(pixel + 1);
+    }
+
+    if (removedPixels === 0 || removedPixels === pixelCount) return { buffer: inputBuffer, removedPixels: 0 };
+
+    const png = await sharp(data, {
+        raw: { width, height, channels }
+    })
+        .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 8 })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+
+    return { buffer: png, removedPixels };
 }
 
 function safeImageExtension(file) {

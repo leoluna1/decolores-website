@@ -343,6 +343,29 @@ textarea:focus {
     font-weight: 400;
 }
 
+.upload-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 44px;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid rgba(229, 57, 53, 0.16);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(229, 57, 53, 0.08), rgba(251, 146, 60, 0.1));
+    color: var(--ink);
+    font-size: 0.9rem;
+}
+
+.upload-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+}
+
+.upload-toggle span {
+    font-weight: 700;
+}
+
 .image-preview {
     display: grid;
     grid-template-columns: 96px 1fr;
