@@ -3,7 +3,20 @@ const state = {
     editingId: null,
     search: '',
     category: 'all',
-    active: 'all'
+    active: 'all',
+    sort: 'updated'
+};
+
+const CATEGORY_LABELS = {
+    escolares: 'Escolares',
+    oficina: 'Oficina',
+    arte: 'Arte',
+    papeleria: 'Papeleria',
+    tecnologia: 'Tecnologia',
+    libros: 'Libros',
+    regalos: 'Regalos',
+    impresion: 'Impresion',
+    accesorios: 'Accesorios'
 };
 
 const nodes = {
@@ -18,6 +31,11 @@ const nodes = {
     search: document.querySelector('[data-search]'),
     categoryFilter: document.querySelector('[data-category-filter]'),
     activeFilter: document.querySelector('[data-active-filter]'),
+    sortFilter: document.querySelector('[data-sort-filter]'),
+    clearFilters: document.querySelector('[data-clear-filters]'),
+    quickFilters: document.querySelectorAll('[data-quick-filter]'),
+    resultCount: document.querySelector('[data-result-count]'),
+    statView: document.querySelector('[data-stat-view]'),
     importText: document.querySelector('[data-import-text]'),
     importMessage: document.querySelector('[data-import-message]'),
     imageFile: document.querySelector('[data-image-file]'),
@@ -72,7 +90,7 @@ function bindEvents() {
     document.querySelector('[data-reset-form]').addEventListener('click', resetForm);
 
     nodes.search.addEventListener('input', event => {
-        state.search = event.target.value.trim().toLowerCase();
+        state.search = event.target.value;
         renderProducts();
     });
 
@@ -84,6 +102,41 @@ function bindEvents() {
     nodes.activeFilter.addEventListener('change', event => {
         state.active = event.target.value;
         renderProducts();
+    });
+
+    nodes.sortFilter.addEventListener('change', event => {
+        state.sort = event.target.value;
+        renderProducts();
+    });
+
+    nodes.clearFilters.addEventListener('click', clearFilters);
+
+    nodes.quickFilters.forEach(button => {
+        button.addEventListener('click', () => {
+            state.active = button.dataset.quickFilter || 'all';
+            nodes.activeFilter.value = state.active;
+            renderProducts();
+        });
+    });
+
+    document.addEventListener('keydown', event => {
+        const target = event.target;
+        const isTyping = target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            target instanceof HTMLSelectElement;
+
+        if ((event.key === '/' && !isTyping) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
+            event.preventDefault();
+            nodes.search.focus();
+            nodes.search.select();
+        }
+
+        if (event.key === 'Escape' && document.activeElement === nodes.search && nodes.search.value) {
+            event.preventDefault();
+            nodes.search.value = '';
+            state.search = '';
+            renderProducts();
+        }
     });
 
     nodes.productForm.image.addEventListener('input', () => updateImagePreview(nodes.productForm.image.value));
@@ -130,23 +183,37 @@ function renderStats() {
 }
 
 function renderProducts() {
-    const products = state.products.filter(product => {
-        const matchesSearch = !state.search ||
-            [product.name, product.category, product.brand, product.status].some(value => String(value).toLowerCase().includes(state.search));
+    const products = sortProducts(state.products.filter(product => {
+        const terms = searchTerms();
+        const matchesSearch = !terms.length || terms.every(term => searchIndex(product).includes(term));
         const matchesCategory = state.category === 'all' || product.category === state.category;
         const matchesActive = state.active === 'all' ||
             (state.active === 'active' && product.active) ||
             (state.active === 'hidden' && !product.active) ||
-            (state.active === 'low' && product.active && product.stock <= 3);
+            (state.active === 'low' && product.active && product.stock <= 3) ||
+            (state.active === 'offer' && product.active && /oferta/i.test(product.status)) ||
+            (state.active === 'popular' && product.active && product.popular);
 
         return matchesSearch && matchesCategory && matchesActive;
-    });
+    }));
+
+    updateInventoryMeta(products.length);
+    syncQuickFilters();
+
+    if (!products.length) {
+        const row = document.createElement('tr');
+        row.className = 'empty-row';
+        row.innerHTML = '<td colspan="7">No hay productos con esos filtros.</td>';
+        nodes.table.replaceChildren(row);
+        return;
+    }
 
     nodes.table.replaceChildren(...products.map(product => {
         const row = document.createElement('tr');
+        row.dataset.productId = product.id;
         row.innerHTML = `
             <td><img class="thumb" alt=""></td>
-            <td><strong></strong><small></small></td>
+            <td><strong></strong><small></small><span class="product-code"></span><div class="product-tags"></div></td>
             <td></td>
             <td></td>
             <td></td>
@@ -154,6 +221,7 @@ function renderProducts() {
             <td>
                 <div class="row-actions">
                     <button type="button" data-edit>Editar</button>
+                    <button class="soft" type="button" data-duplicate>Duplicar</button>
                     <button class="danger" type="button" data-toggle></button>
                 </div>
             </td>
@@ -167,17 +235,144 @@ function renderProducts() {
         };
         row.querySelector('strong').textContent = product.name;
         row.querySelector('small').textContent = product.brand || 'Sin marca';
-        row.children[2].textContent = product.category;
+        row.querySelector('.product-code').textContent = product.id ? `Codigo: ${product.id}` : '';
+        renderTags(row.querySelector('.product-tags'), product);
+        row.children[2].textContent = CATEGORY_LABELS[product.category] || product.category;
         row.children[3].textContent = money(product.price);
         row.children[4].textContent = String(product.stock);
         row.children[4].classList.toggle('stock-low', product.active && product.stock <= 3);
-        row.querySelector('.status-pill').textContent = product.active ? product.status : 'Oculto';
+        const pill = row.querySelector('.status-pill');
+        pill.textContent = product.active ? product.status : 'Oculto';
+        pill.classList.toggle('is-hidden', !product.active);
+        pill.classList.toggle('is-offer', product.active && /oferta/i.test(product.status));
+        pill.classList.toggle('is-popular', product.active && product.popular && !/oferta/i.test(product.status));
         row.querySelector('[data-edit]').addEventListener('click', () => editProduct(product));
+        row.querySelector('[data-duplicate]').addEventListener('click', () => duplicateProduct(product));
         const toggle = row.querySelector('[data-toggle]');
         toggle.textContent = product.active ? 'Ocultar' : 'Activar';
         toggle.addEventListener('click', () => toggleProduct(product));
         return row;
     }));
+}
+
+function searchTerms() {
+    return normalizeSearch(state.search).split(/\s+/).filter(Boolean);
+}
+
+function normalizeSearch(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9.]+/g, ' ')
+        .trim();
+}
+
+function searchIndex(product) {
+    return normalizeSearch([
+        product.id,
+        product.name,
+        product.category,
+        CATEGORY_LABELS[product.category],
+        product.brand,
+        product.status,
+        product.description,
+        product.price,
+        money(product.price),
+        product.stock,
+        product.active ? 'activo visible disponible' : 'oculto inactivo',
+        product.popular ? 'destacado popular' : ''
+    ].join(' '));
+}
+
+function sortProducts(products) {
+    const sorted = [...products];
+    const terms = searchTerms();
+    const byName = (a, b) => String(a.name).localeCompare(String(b.name), 'es', { sensitivity: 'base' });
+    const byUpdated = (a, b) => dateValue(b.updatedAt) - dateValue(a.updatedAt) || byName(a, b);
+
+    if (terms.length) {
+        sorted.sort((a, b) => scoreProduct(b, terms) - scoreProduct(a, terms) || byUpdated(a, b));
+        if (state.sort === 'updated') return sorted;
+    }
+
+    if (state.sort === 'name') return sorted.sort(byName);
+    if (state.sort === 'price-desc') return sorted.sort((a, b) => Number(b.price) - Number(a.price) || byName(a, b));
+    if (state.sort === 'price-asc') return sorted.sort((a, b) => Number(a.price) - Number(b.price) || byName(a, b));
+    if (state.sort === 'stock-asc') return sorted.sort((a, b) => Number(a.stock) - Number(b.stock) || byName(a, b));
+    return sorted.sort(byUpdated);
+}
+
+function scoreProduct(product, terms) {
+    const name = normalizeSearch(product.name);
+    const brand = normalizeSearch(product.brand);
+    const id = normalizeSearch(product.id);
+    return terms.reduce((score, term) => {
+        if (id === term) return score + 80;
+        if (name === term) return score + 60;
+        if (name.startsWith(term)) return score + 35;
+        if (brand.startsWith(term)) return score + 20;
+        if (id.includes(term)) return score + 16;
+        if (searchIndex(product).includes(term)) return score + 8;
+        return score;
+    }, 0);
+}
+
+function dateValue(value) {
+    const parsed = Date.parse(String(value || '').replace(' ', 'T'));
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function updateInventoryMeta(visible) {
+    const total = state.products.length;
+    const search = state.search.trim();
+    const category = state.category === 'all' ? '' : (CATEGORY_LABELS[state.category] || state.category);
+    const status = {
+        active: 'activos',
+        hidden: 'ocultos',
+        low: 'con bajo stock',
+        offer: 'en oferta',
+        popular: 'destacados'
+    }[state.active] || '';
+    const filters = [search && `busqueda "${search}"`, category, status].filter(Boolean);
+
+    nodes.statView.textContent = String(visible);
+    nodes.resultCount.textContent = filters.length
+        ? `${visible} de ${total} productos filtrados por ${filters.join(', ')}.`
+        : `${total} productos cargados. Usa / o Cmd+K para buscar rapido.`;
+}
+
+function syncQuickFilters() {
+    nodes.quickFilters.forEach(button => {
+        button.classList.toggle('is-active', button.dataset.quickFilter === state.active);
+    });
+}
+
+function renderTags(node, product) {
+    const tags = [];
+    if (product.popular) tags.push('Destacado');
+    if (product.active && product.stock <= 3) tags.push('Bajo stock');
+    if (!product.active) tags.push('Oculto');
+
+    node.replaceChildren(...tags.map(text => {
+        const tag = document.createElement('span');
+        tag.className = 'mini-tag';
+        tag.textContent = text;
+        return tag;
+    }));
+}
+
+function clearFilters() {
+    state.search = '';
+    state.category = 'all';
+    state.active = 'all';
+    state.sort = 'updated';
+    nodes.search.value = '';
+    nodes.categoryFilter.value = state.category;
+    nodes.activeFilter.value = state.active;
+    nodes.sortFilter.value = state.sort;
+    renderProducts();
+    nodes.search.focus();
 }
 
 function editProduct(product) {
@@ -198,6 +393,30 @@ function editProduct(product) {
     form.active.checked = Boolean(product.active);
     updateImagePreview(product.image);
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function duplicateProduct(product) {
+    state.editingId = null;
+    nodes.formTitle.textContent = 'Duplicar producto';
+    const form = nodes.productForm;
+    form.id.value = '';
+    form.name.value = `${product.name} copia`;
+    form.category.value = product.category;
+    form.brand.value = product.brand;
+    form.price.value = product.price;
+    form.oldPrice.value = product.oldPrice || '';
+    form.stock.value = product.stock;
+    form.status.value = product.status || 'Disponible';
+    form.image.value = product.image || '';
+    form.description.value = product.description || '';
+    form.popular.checked = Boolean(product.popular);
+    form.active.checked = Boolean(product.active);
+    nodes.imageFile.value = '';
+    updateImagePreview(product.image);
+    setMessage(nodes.productMessage, 'Copia preparada. Revisa el nombre y guarda para crear otro producto.');
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    form.name.focus();
+    form.name.select();
 }
 
 async function toggleProduct(product) {

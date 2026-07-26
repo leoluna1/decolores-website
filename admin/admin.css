@@ -195,7 +195,7 @@ textarea:focus {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1rem;
 }
 
@@ -234,6 +234,12 @@ textarea:focus {
     letter-spacing: -0.02em;
 }
 
+.panel-subtitle {
+    margin-top: 0.35rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -267,18 +273,47 @@ textarea:focus {
 }
 
 .table-controls {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(280px, 1.3fr) repeat(3, minmax(160px, 0.7fr)) auto;
+    align-items: end;
     justify-content: flex-end;
     gap: 0.65rem;
+    width: min(100%, 980px);
 }
 
 .table-controls label {
-    width: min(220px, 100%);
+    min-width: 0;
 }
 
 .search-box {
-    width: min(320px, 100%);
+    min-width: min(360px, 100%);
+}
+
+.search-box input {
+    min-height: 48px;
+    border-color: rgba(15, 118, 110, 0.22);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 252, 0.9)),
+        white;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 28px rgba(15, 118, 110, 0.06);
+}
+
+.quick-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.quick-filter-bar button {
+    min-height: 38px;
+    padding: 0 0.85rem;
+}
+
+.quick-filter-bar button.is-active {
+    border-color: rgba(15, 118, 110, 0.28);
+    background: rgba(15, 118, 110, 0.1);
+    color: var(--accent);
 }
 
 .upload-field span {
@@ -336,7 +371,7 @@ td {
     border-bottom: 1px solid var(--line);
     padding: 0.85rem;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
 }
 
 th {
@@ -356,8 +391,35 @@ td small {
     color: var(--muted);
 }
 
-.row-actions {
+.product-code {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.product-tags {
     display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+
+.mini-tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    border-radius: 999px;
+    background: var(--soft);
+    color: var(--muted);
+    padding: 0 0.48rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+.row-actions {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
     gap: 0.45rem;
 }
 
@@ -371,6 +433,11 @@ td small {
     color: var(--danger);
 }
 
+.row-actions .soft {
+    background: var(--soft);
+    color: var(--ink);
+}
+
 .status-pill {
     display: inline-flex;
     border-radius: 999px;
@@ -380,9 +447,30 @@ td small {
     font-size: 0.82rem;
 }
 
+.status-pill.is-hidden {
+    background: #fff1f3;
+    color: var(--danger);
+}
+
+.status-pill.is-offer {
+    background: #fff7e6;
+    color: #a15c00;
+}
+
+.status-pill.is-popular {
+    background: #e9f8f5;
+    color: var(--accent);
+}
+
 .stock-low {
     color: var(--danger);
     font-weight: 500;
+}
+
+.empty-row td {
+    padding: 2rem 1rem;
+    color: var(--muted);
+    text-align: center;
 }
 
 .sr-only {
@@ -402,10 +490,15 @@ td small {
     }
 
     .table-controls {
+        grid-template-columns: 1fr;
         justify-content: stretch;
     }
 
     .table-controls label {
+        width: 100%;
+    }
+
+    .table-controls button {
         width: 100%;
     }
 
@@ -417,5 +510,90 @@ td small {
 
     .wide {
         grid-column: auto;
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-shell {
+        width: min(100% - 24px, 1240px);
+        padding: 20px 0;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .table-wrap {
+        overflow: visible;
+    }
+
+    table,
+    tbody,
+    tr,
+    td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tbody {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    tbody tr {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: white;
+        padding: 0.85rem;
+        box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
+    }
+
+    td {
+        border: 0;
+        padding: 0.4rem 0;
+    }
+
+    td:not(:first-child)::before {
+        display: block;
+        margin-bottom: 0.18rem;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    td:nth-child(2)::before { content: "Producto"; }
+    td:nth-child(3)::before { content: "Categoria"; }
+    td:nth-child(4)::before { content: "Precio"; }
+    td:nth-child(5)::before { content: "Stock"; }
+    td:nth-child(6)::before { content: "Estado"; }
+    td:nth-child(7)::before { content: "Acciones"; }
+
+    .thumb {
+        width: 100%;
+        height: 150px;
+    }
+
+    .row-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .row-actions button {
+        width: 100%;
+    }
+
+    .empty-row td {
+        padding: 1.25rem 0.5rem;
     }
 }

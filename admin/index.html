@@ -45,6 +45,7 @@
                 <article><span data-stat-active>0</span><p>Activos</p></article>
                 <article><span data-stat-low>0</span><p>Bajo stock</p></article>
                 <article><span data-stat-offer>0</span><p>Ofertas</p></article>
+                <article><span data-stat-view>0</span><p>En vista actual</p></article>
             </section>
 
             <section class="workspace">
@@ -139,15 +140,20 @@
                 </aside>
             </section>
 
-            <section class="panel">
+            <section class="panel inventory-panel">
                 <div class="panel-heading">
                     <div>
                         <span class="kicker">Inventario</span>
                         <h2>Productos registrados</h2>
+                        <p class="panel-subtitle" data-result-count>Preparando inventario.</p>
                     </div>
                     <div class="table-controls">
+                        <label class="search-box">
+                            Busqueda rapida
+                            <input data-search placeholder="Buscar producto o codigo" autocomplete="off">
+                        </label>
                         <label>
-                            <span class="sr-only">Filtrar categoria</span>
+                            Categoria
                             <select data-category-filter>
                                 <option value="all">Todas las categorias</option>
                                 <option value="escolares">Escolares</option>
@@ -162,19 +168,35 @@
                             </select>
                         </label>
                         <label>
-                            <span class="sr-only">Filtrar estado</span>
+                            Estado
                             <select data-active-filter>
                                 <option value="all">Todos</option>
                                 <option value="active">Activos</option>
                                 <option value="hidden">Ocultos</option>
                                 <option value="low">Bajo stock</option>
+                                <option value="offer">Ofertas</option>
+                                <option value="popular">Destacados</option>
                             </select>
                         </label>
-                        <label class="search-box">
-                            <span class="sr-only">Buscar</span>
-                            <input data-search placeholder="Buscar producto">
+                        <label>
+                            Orden
+                            <select data-sort-filter>
+                                <option value="updated">Recientes</option>
+                                <option value="name">Nombre A-Z</option>
+                                <option value="price-desc">Mayor precio</option>
+                                <option value="price-asc">Menor precio</option>
+                                <option value="stock-asc">Menor stock</option>
+                            </select>
                         </label>
+                        <button class="ghost" type="button" data-clear-filters>Limpiar</button>
                     </div>
+                </div>
+                <div class="quick-filter-bar" aria-label="Filtros rapidos">
+                    <button class="ghost" type="button" data-quick-filter="active">Activos</button>
+                    <button class="ghost" type="button" data-quick-filter="low">Bajo stock</button>
+                    <button class="ghost" type="button" data-quick-filter="offer">Ofertas</button>
+                    <button class="ghost" type="button" data-quick-filter="popular">Destacados</button>
+                    <button class="ghost" type="button" data-quick-filter="hidden">Ocultos</button>
                 </div>
                 <div class="table-wrap">
                     <table>
