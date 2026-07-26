@@ -133,6 +133,16 @@
                             <h2>Importar CSV</h2>
                         </div>
                     </div>
+                    <div class="csv-source-card">
+                        <label>Link CSV automático
+                            <input data-csv-url type="url" placeholder="https://docs.google.com/spreadsheets/d/...">
+                        </label>
+                        <div class="csv-source-actions">
+                            <button class="ghost" type="button" data-save-csv-url>Guardar link</button>
+                            <button type="button" data-sync-csv>Sincronizar ahora</button>
+                        </div>
+                        <p class="form-message" data-csv-message role="status"></p>
+                    </div>
                     <p>Pega filas CSV con columnas: nombre, categoria, marca, precio, stock, imagen, descripcion.</p>
                     <textarea data-import-text rows="8" placeholder="Cuaderno,escolares,Norma,1.50,20,images/materiales/cuadernouni.png,Cuaderno universitario"></textarea>
                     <button type="button" data-import>Importar productos</button>

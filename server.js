@@ -15,6 +15,9 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_COOKIE = 'decolores_admin';
+const PRODUCT_CSV_URL = clean(process.env.PRODUCT_CSV_URL, 1000);
+const PRODUCT_CSV_SYNC_ON_START = process.env.PRODUCT_CSV_SYNC_ON_START === '1';
+const PRODUCT_CSV_SYNC_INTERVAL_MINUTES = Number(process.env.PRODUCT_CSV_SYNC_INTERVAL_MINUTES || 0);
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -53,6 +56,12 @@ db.exec(`
         popular INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL DEFAULT '',
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `);
@@ -128,29 +137,39 @@ app.delete('/api/products/:id', requireAdmin, (req, res) => {
 
 app.post('/api/products/import', requireAdmin, (req, res) => {
     const rows = Array.isArray(req.body.products) ? req.body.products : [];
-    let created = 0;
-    let updated = 0;
-    const errors = [];
+    res.json(importProducts(rows));
+});
 
-    withTransaction(() => {
-        rows.forEach((raw, index) => {
-            try {
-                const product = normalizeProduct(raw);
-                product.id = uniqueId(product.id || slugify(product.name), { allowExisting: true });
-                if (getProduct(product.id, true)) {
-                    updateProduct(product);
-                    updated += 1;
-                } else {
-                    insertProduct(product);
-                    created += 1;
-                }
-            } catch (error) {
-                errors.push({ row: index + 1, message: error.message });
-            }
-        });
+app.get('/api/products/csv-source', requireAdmin, (req, res) => {
+    res.json({
+        url: getCsvSourceUrl(),
+        envUrlConfigured: Boolean(PRODUCT_CSV_URL),
+        lastSync: getSetting('product_csv_last_sync'),
+        lastSyncSummary: getSetting('product_csv_last_summary')
     });
+});
 
-    res.json({ created, updated, errors });
+app.post('/api/products/csv-source', requireAdmin, (req, res) => {
+    const url = clean(req.body.url, 1000);
+    if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link CSV valido http/https.' });
+
+    setSetting('product_csv_url', url);
+    res.json({ ok: true, url: getCsvSourceUrl() });
+});
+
+app.post('/api/products/sync-csv', requireAdmin, async (req, res) => {
+    try {
+        if (req.body.url !== undefined) {
+            const url = clean(req.body.url, 1000);
+            if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link CSV valido http/https.' });
+            setSetting('product_csv_url', url);
+        }
+
+        const result = await syncProductsFromCsv();
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 app.post('/api/uploads/products', requireAdmin, (req, res) => {
@@ -185,6 +204,7 @@ app.use(express.static(ROOT, { extensions: ['html'] }));
 app.listen(PORT, () => {
     console.log(`Papeleria De Colores: http://localhost:${PORT}`);
     console.log(`Admin: http://localhost:${PORT}/admin`);
+    scheduleCsvSync();
 });
 
 function requireAdmin(req, res, next) {
@@ -274,6 +294,296 @@ function updateProduct(product) {
             updated_at = CURRENT_TIMESTAMP
         WHERE id = @id
     `).run(product);
+}
+
+function importProducts(rows) {
+    let created = 0;
+    let updated = 0;
+    const errors = [];
+
+    withTransaction(() => {
+        rows.forEach((raw, index) => {
+            try {
+                const product = normalizeProduct(raw);
+                product.id = uniqueId(product.id || slugify(product.name), { allowExisting: true });
+                if (getProduct(product.id, true)) {
+                    updateProduct(product);
+                    updated += 1;
+                } else {
+                    insertProduct(product);
+                    created += 1;
+                }
+            } catch (error) {
+                errors.push({ row: index + 1, message: error.message });
+            }
+        });
+    });
+
+    return { created, updated, errors };
+}
+
+async function syncProductsFromCsv() {
+    const url = getCsvSourceUrl();
+    if (!url) throw new Error('Configura primero el link CSV de productos.');
+    if (!isAllowedCsvUrl(url)) throw new Error('El link CSV configurado no es valido.');
+
+    const csvUrl = normalizeCsvUrl(url);
+    const response = await fetch(csvUrl, {
+        headers: {
+            Accept: 'text/csv,text/plain,*/*',
+            'User-Agent': 'decolores-product-sync/1.0'
+        }
+    });
+
+    if (!response.ok) throw new Error(`No se pudo descargar el CSV. HTTP ${response.status}.`);
+
+    const csvText = await response.text();
+    const products = parseCsvProducts(csvText);
+    if (!products.length) throw new Error('El CSV no contiene productos validos.');
+
+    const result = importProducts(products);
+    const syncedAt = new Date().toISOString();
+    const summary = `CSV sincronizado. Filas validas: ${products.length}. Creados: ${result.created}. Actualizados: ${result.updated}. Errores: ${result.errors.length}.`;
+    setSetting('product_csv_last_sync', syncedAt);
+    setSetting('product_csv_last_summary', summary);
+
+    return { ...result, rows: products.length, syncedAt, url: maskUrlForClient(url), summary };
+}
+
+function parseCsvProducts(csvText) {
+    const rows = parseCsvRows(csvText);
+    if (rows.length < 2) return [];
+
+    const header = buildCsvHeader(rows[0]);
+    const dataRows = header.hasHeader ? rows.slice(1) : rows;
+
+    return dataRows
+        .map((cols, index) => csvRowToProduct(cols, header.index, index))
+        .filter(Boolean);
+}
+
+function parseCsvRows(csvText) {
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let quoted = false;
+
+    for (let i = 0; i < String(csvText || '').length; i += 1) {
+        const char = csvText[i];
+        const next = csvText[i + 1];
+
+        if (char === '"') {
+            if (quoted && next === '"') {
+                cell += '"';
+                i += 1;
+            } else {
+                quoted = !quoted;
+            }
+        } else if (char === ',' && !quoted) {
+            row.push(cell);
+            cell = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+            if (char === '\r' && next === '\n') i += 1;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = '';
+        } else {
+            cell += char;
+        }
+    }
+
+    row.push(cell);
+    rows.push(row);
+    return rows
+        .map(csvRow => csvRow.map(value => cleanCsvCell(value)))
+        .filter(csvRow => csvRow.some(Boolean));
+}
+
+function buildCsvHeader(firstRow) {
+    const normalized = firstRow.map(normalizeHeader);
+    const find = (...names) => {
+        const targets = names.map(normalizeHeader);
+        return normalized.findIndex(header => targets.includes(header));
+    };
+    const findLast = (...names) => {
+        const targets = names.map(normalizeHeader);
+        for (let i = normalized.length - 1; i >= 0; i -= 1) {
+            if (targets.includes(normalized[i])) return i;
+        }
+        return -1;
+    };
+
+    const index = {
+        id: find('id', 'codigo', 'código', 'sku'),
+        name: find('nombre', 'producto', 'detalle', 'item', 'articulo', 'artículo'),
+        category: find('categoria', 'categoría', 'familia', 'linea', 'línea'),
+        brand: find('marca', 'proveedor'),
+        price: findLast('precio', 'pvp', 'p.v.p.', 'valor', 'precio venta', 'pvp sug uni'),
+        oldPrice: find('precio anterior', 'precio_anterior', 'oldprice', 'old price'),
+        stock: find('stock', 'existencia', 'inventario', 'cantidad', 'adquisicion', 'adquisición'),
+        image: find('imagen', 'foto', 'image', 'url imagen', 'url_imagen'),
+        description: find('descripcion', 'descripción', 'resumen'),
+        status: find('estado', 'status'),
+        popular: find('destacado', 'popular'),
+        active: find('activo', 'visible', 'publicado')
+    };
+
+    const hasHeader = index.name >= 0 && index.price >= 0;
+    if (hasHeader) return { hasHeader, index };
+
+    return {
+        hasHeader: false,
+        index: {
+            name: 0,
+            category: 1,
+            brand: 2,
+            price: 3,
+            stock: 4,
+            image: 5,
+            description: 6,
+            id: -1,
+            oldPrice: -1,
+            status: -1,
+            popular: -1,
+            active: -1
+        }
+    };
+}
+
+function csvRowToProduct(cols, index, rowIndex) {
+    const get = key => index[key] >= 0 ? cols[index[key]] : '';
+    const name = clean(get('name'), 120);
+    const price = parseCsvNumber(get('price'));
+    if (!name || price == null) return null;
+
+    const category = normalizeCategory(get('category') || inferCategory(name));
+    const stock = parseCsvInteger(get('stock'));
+
+    return {
+        id: clean(get('id'), 80) || slugify(name) || `csv-${rowIndex + 1}`,
+        name,
+        category,
+        brand: clean(get('brand'), 80) || 'De Colores',
+        price,
+        oldPrice: parseCsvNumber(get('oldPrice')),
+        stock: stock == null ? 1 : stock,
+        image: clean(get('image'), 220) || categoryImage(category),
+        description: clean(get('description'), 280) || 'Producto disponible para consultar en tienda.',
+        status: clean(get('status'), 40) || (stock === 0 ? 'Agotado' : 'Disponible'),
+        popular: get('popular') ? truthy(get('popular')) : rowIndex < 12,
+        active: get('active') ? truthy(get('active')) : true
+    };
+}
+
+function cleanCsvCell(value) {
+    return String(value || '').replace(/^\uFEFF/, '').trim();
+}
+
+function normalizeHeader(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+}
+
+function parseCsvNumber(value) {
+    const text = cleanCsvCell(value);
+    if (!text) return null;
+    const normalized = text
+        .replace(/\s+/g, '')
+        .replace(/\$/g, '')
+        .replace(/,/g, '.')
+        .replace(/[^\d.-]/g, '');
+    const number = Number.parseFloat(normalized);
+    return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function parseCsvInteger(value) {
+    const number = parseCsvNumber(value);
+    return number == null ? null : Math.max(0, Math.trunc(number));
+}
+
+function inferCategory(name) {
+    const text = slugify(name);
+    const groups = [
+        ['tecnologia', ['calculadora', 'usb', 'mouse', 'cable', 'audifono', 'parlante', 'teclado']],
+        ['arte', ['pintura', 'acuarela', 'pincel', 'tempera', 'crayon', 'color', 'marcador', 'plastilina']],
+        ['escolares', ['cuaderno', 'lapiz', 'lapices', 'mochila', 'cartuchera', 'regla', 'compas', 'borrador']],
+        ['oficina', ['archivador', 'carpeta', 'folder', 'grapa', 'grapadora', 'clip', 'perforadora', 'papel-bond']],
+        ['libros', ['libro', 'cuento', 'diccionario', 'atlas']],
+        ['regalos', ['adorno', 'regalo', 'navidad', 'globo', 'cinta', 'decoracion']]
+    ];
+    const match = groups.find(([, keywords]) => keywords.some(keyword => text.includes(keyword)));
+    return match ? match[0] : 'papeleria';
+}
+
+function getCsvSourceUrl() {
+    return PRODUCT_CSV_URL || getSetting('product_csv_url');
+}
+
+function getSetting(key) {
+    return db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key)?.value || '';
+}
+
+function setSetting(key, value) {
+    db.prepare(`
+        INSERT INTO app_settings (key, value, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+    `).run(key, String(value || ''));
+}
+
+function isAllowedCsvUrl(url) {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function normalizeCsvUrl(url) {
+    const parsed = new URL(url);
+    const sheetMatch = parsed.hostname === 'docs.google.com' && parsed.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
+    if (!sheetMatch) return url;
+
+    const gidFromHash = parsed.hash.match(/gid=(\d+)/)?.[1];
+    const gid = parsed.searchParams.get('gid') || gidFromHash || '0';
+    return `https://docs.google.com/spreadsheets/d/${sheetMatch[1]}/export?format=csv&gid=${gid}`;
+}
+
+function maskUrlForClient(url) {
+    if (!url) return '';
+    try {
+        const parsed = new URL(url);
+        return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+        return '';
+    }
+}
+
+function scheduleCsvSync() {
+    if (PRODUCT_CSV_SYNC_ON_START && getCsvSourceUrl()) {
+        syncProductsFromCsv().then(result => {
+            console.log(`[CSV] ${result.summary}`);
+        }).catch(error => {
+            console.warn(`[CSV] ${error.message}`);
+        });
+    }
+
+    if (Number.isFinite(PRODUCT_CSV_SYNC_INTERVAL_MINUTES) && PRODUCT_CSV_SYNC_INTERVAL_MINUTES > 0) {
+        const intervalMs = PRODUCT_CSV_SYNC_INTERVAL_MINUTES * 60 * 1000;
+        setInterval(() => {
+            if (!getCsvSourceUrl()) return;
+            syncProductsFromCsv().then(result => {
+                console.log(`[CSV] ${result.summary}`);
+            }).catch(error => {
+                console.warn(`[CSV] ${error.message}`);
+            });
+        }, intervalMs).unref();
+    }
 }
 
 function normalizeProduct(input) {

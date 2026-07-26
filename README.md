@@ -50,7 +50,29 @@ Funciones actuales del admin:
 - Subir imagenes JPG, PNG, WebP o GIF hasta 3MB.
 - Filtrar inventario por busqueda, categoria, activos, ocultos y bajo stock.
 - Importar productos desde CSV simple.
+- Guardar un link CSV externo y sincronizar productos desde ese link.
 - Exportar inventario a CSV.
+
+### Sincronizar productos desde un link CSV
+
+El cliente puede mantener los productos en Google Sheets u otro CSV publico. El servidor descarga ese CSV, crea o actualiza productos en `data/decolores.sqlite`, y el catalogo publico los lee desde `/api/products`.
+
+Columnas recomendadas:
+
+```csv
+id,nombre,categoria,marca,precio,precio anterior,stock,imagen,descripcion,estado,destacado,activo
+```
+
+Tambien acepta nombres comunes como `producto`, `detalle`, `pvp`, `existencia`, `foto`, `visible` y `popular`.
+
+Opciones de configuracion:
+
+- Desde el admin: entra a `/admin`, pega el link en `Link CSV automatico`, guarda y pulsa `Sincronizar ahora`.
+- Desde produccion: define `PRODUCT_CSV_URL` con el link del CSV.
+- Para sincronizar al iniciar el servidor: `PRODUCT_CSV_SYNC_ON_START=1`.
+- Para sincronizar cada cierto tiempo: `PRODUCT_CSV_SYNC_INTERVAL_MINUTES=30` o el intervalo que prefieras.
+
+Para Google Sheets, comparte la hoja como publica o publicada en la web. Puedes pegar el link normal de la hoja; el servidor lo convierte al formato CSV cuando detecta `docs.google.com/spreadsheets`.
 
 ### Publicar
 

@@ -36,6 +36,10 @@ const nodes = {
     quickFilters: document.querySelectorAll('[data-quick-filter]'),
     resultCount: document.querySelector('[data-result-count]'),
     statView: document.querySelector('[data-stat-view]'),
+    csvUrl: document.querySelector('[data-csv-url]'),
+    csvMessage: document.querySelector('[data-csv-message]'),
+    saveCsvUrl: document.querySelector('[data-save-csv-url]'),
+    syncCsv: document.querySelector('[data-sync-csv]'),
     importText: document.querySelector('[data-import-text]'),
     importMessage: document.querySelector('[data-import-message]'),
     imageFile: document.querySelector('[data-image-file]'),
@@ -143,6 +147,9 @@ function bindEvents() {
     nodes.imageFile.addEventListener('change', uploadImage);
     document.querySelector('[data-export-csv]').addEventListener('click', exportCsv);
 
+    nodes.saveCsvUrl.addEventListener('click', saveCsvUrl);
+    nodes.syncCsv.addEventListener('click', syncCsvSource);
+
     document.querySelector('[data-import]').addEventListener('click', async () => {
         const products = parseImport(nodes.importText.value);
         if (!products.length) {
@@ -164,7 +171,24 @@ function bindEvents() {
 async function showDashboard() {
     nodes.loginView.hidden = true;
     nodes.dashboard.hidden = false;
+    await loadCsvSource();
     await loadProducts();
+}
+
+async function loadCsvSource() {
+    try {
+        const source = await api('/api/products/csv-source');
+        nodes.csvUrl.value = source.url || '';
+        if (source.envUrlConfigured) {
+            nodes.csvUrl.disabled = true;
+            nodes.saveCsvUrl.disabled = true;
+            setMessage(nodes.csvMessage, 'Link configurado por variable de entorno en el servidor.');
+        } else if (source.lastSyncSummary) {
+            setMessage(nodes.csvMessage, `${source.lastSyncSummary} Ultima sincronizacion: ${formatDateTime(source.lastSync)}.`);
+        }
+    } catch (error) {
+        setMessage(nodes.csvMessage, error.message, true);
+    }
 }
 
 async function loadProducts() {
@@ -180,6 +204,37 @@ function renderStats() {
     document.querySelector('[data-stat-active]').textContent = active.length;
     document.querySelector('[data-stat-low]').textContent = active.filter(product => product.stock <= 3).length;
     document.querySelector('[data-stat-offer]').textContent = active.filter(product => /oferta/i.test(product.status)).length;
+}
+
+async function saveCsvUrl() {
+    setMessage(nodes.csvMessage, 'Guardando link CSV...');
+    try {
+        const result = await api('/api/products/csv-source', {
+            method: 'POST',
+            body: { url: nodes.csvUrl.value.trim() }
+        });
+        nodes.csvUrl.value = result.url || '';
+        setMessage(nodes.csvMessage, result.url ? 'Link CSV guardado.' : 'Link CSV eliminado.');
+    } catch (error) {
+        setMessage(nodes.csvMessage, error.message, true);
+    }
+}
+
+async function syncCsvSource() {
+    setMessage(nodes.csvMessage, 'Sincronizando productos desde CSV...');
+    nodes.syncCsv.disabled = true;
+    try {
+        const result = await api('/api/products/sync-csv', {
+            method: 'POST',
+            body: { url: nodes.csvUrl.disabled ? undefined : nodes.csvUrl.value.trim() }
+        });
+        setMessage(nodes.csvMessage, result.summary || `Sincronizacion lista. Creados: ${result.created}. Actualizados: ${result.updated}.`);
+        await loadProducts();
+    } catch (error) {
+        setMessage(nodes.csvMessage, error.message, true);
+    } finally {
+        nodes.syncCsv.disabled = false;
+    }
 }
 
 function renderProducts() {
@@ -573,4 +628,11 @@ function setMessage(node, message, isError = false) {
 
 function money(value) {
     return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function formatDateTime(value) {
+    if (!value) return 'sin registro';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString('es-EC', { dateStyle: 'short', timeStyle: 'short' });
 }
