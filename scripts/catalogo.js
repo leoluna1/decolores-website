@@ -24,7 +24,9 @@
         papeleria: { name: 'Papelería', description: 'Papel, sobres, etiquetas y productos de uso diario.' },
         tecnologia: { name: 'Tecnología', description: 'Calculadoras, almacenamiento y accesorios.' },
         libros: { name: 'Libros y lectura', description: 'Material educativo y lectura complementaria.' },
-        regalos: { name: 'Regalos y decoración', description: 'Detalles, empaques y productos para ocasiones especiales.' }
+        regalos: { name: 'Regalos y decoración', description: 'Detalles, empaques y productos para ocasiones especiales.' },
+        impresion: { name: 'Impresión', description: 'Copias, anillados y acabados de documentos.' },
+        accesorios: { name: 'Accesorios', description: 'Detalles útiles para organizar y personalizar.' }
     };
 
     const fallbackProducts = (config.featuredProducts || []).map((product, index) => ({
@@ -82,7 +84,10 @@
             tecnologia: 'tecnologia',
             tech: 'tecnologia',
             libros: 'libros',
-            lectura: 'libros'
+            lectura: 'libros',
+            impresion: 'impresion',
+            impresiones: 'impresion',
+            accesorios: 'accesorios'
         };
 
         return map[normalized] || normalized || 'oficina';
@@ -279,6 +284,7 @@
             oldPrice: product.oldPrice == null ? null : Number(product.oldPrice),
             description: clean(product.description) || 'Producto disponible para consultar en tienda.',
             stock: Number.parseInt(product.stock || 0, 10),
+            status: clean(product.status) || 'Disponible',
             popular: Boolean(product.popular),
             image: clean(product.image) || categoryImage(normalizeCategory(product.category)),
             color: validHexColor(product.color) ? product.color.toLowerCase() : ''
@@ -467,8 +473,8 @@
         imageWrap.appendChild(image);
 
         const status = document.createElement('span');
-        status.className = product.stock > 0 ? 'product-status product-status--available' : 'product-status product-status--soldout';
-        status.textContent = product.stock > 0 ? (product.popular ? 'Destacado' : 'Disponible') : 'Agotado';
+        status.className = `product-status ${productStatusClass(product)}`;
+        status.textContent = productStatusLabel(product);
         imageWrap.appendChild(status);
 
         const body = document.createElement('div');
@@ -505,10 +511,16 @@
         const actions = document.createElement('div');
         actions.className = 'product-actions';
 
+        const quick = document.createElement('button');
+        quick.type = 'button';
+        quick.className = 'quick-view-button';
+        quick.textContent = 'Vista rápida';
+        quick.addEventListener('click', () => openQuickView(product));
+
         const buy = document.createElement('button');
         buy.type = 'button';
         buy.className = 'buy-button';
-        buy.textContent = product.stock > 0 ? 'Comprar' : 'Consultar';
+        buy.textContent = product.stock > 0 ? 'Agregar' : 'Consultar';
         buy.disabled = product.stock <= 0;
         buy.addEventListener('click', () => window.DeColoresCart?.add(product));
 
@@ -519,7 +531,7 @@
         whatsapp.target = '_blank';
         whatsapp.rel = 'noopener noreferrer';
 
-        actions.append(buy, whatsapp);
+        actions.append(quick, buy, whatsapp);
         body.append(category, title, description, meta, price, actions);
         card.append(imageWrap, body);
 
@@ -534,6 +546,117 @@
 
     function validHexColor(color) {
         return /^#[0-9a-f]{6}$/i.test(String(color || '').trim());
+    }
+
+    function productStatusLabel(product) {
+        const status = String(product.status || '').trim();
+        if (product.stock <= 0) return 'Agotado';
+        if (product.stock <= 3) return 'Bajo stock';
+        if (/oferta/i.test(status)) return 'Oferta';
+        if (/nuevo/i.test(status)) return 'Nuevo';
+        if (product.popular) return 'Más pedido';
+        return 'Disponible';
+    }
+
+    function productStatusClass(product) {
+        const label = productStatusLabel(product);
+        if (label === 'Agotado') return 'product-status--soldout';
+        if (label === 'Bajo stock') return 'product-status--low';
+        if (label === 'Nuevo') return 'product-status--new';
+        if (label === 'Más pedido') return 'product-status--popular';
+        return 'product-status--available';
+    }
+
+    function openQuickView(product) {
+        const panel = ensureQuickView();
+        const src = validImage(product.image) ? product.image : categoryImage(product.category);
+        const oldPrice = product.oldPrice && product.oldPrice > product.price ? `$${product.oldPrice.toFixed(2)}` : '';
+
+        panel.querySelector('[data-quick-image]').src = src;
+        panel.querySelector('[data-quick-image]').alt = product.name;
+        panel.querySelector('[data-quick-category]').textContent = categoryMeta[product.category]?.name || product.category;
+        panel.querySelector('[data-quick-status]').textContent = productStatusLabel(product);
+        panel.querySelector('[data-quick-status]').className = `product-status ${productStatusClass(product)}`;
+        panel.querySelector('[data-quick-title]').textContent = product.name;
+        panel.querySelector('[data-quick-description]').textContent = product.description;
+        panel.querySelector('[data-quick-price]').textContent = `$${product.price.toFixed(2)}`;
+        panel.querySelector('[data-quick-old-price]').textContent = oldPrice;
+        panel.querySelector('[data-quick-old-price]').hidden = !oldPrice;
+        panel.querySelector('[data-quick-stock]').textContent = product.stock > 0 ? `Stock disponible: ${product.stock}` : 'Consultar reposición';
+        panel.querySelector('[data-quick-qty]').value = '1';
+        panel.querySelector('[data-quick-qty]').max = String(Math.max(product.stock || 1, 1));
+        panel.querySelector('[data-quick-add]').disabled = product.stock <= 0;
+        panel.querySelector('[data-quick-add]').onclick = () => {
+            window.DeColoresCart?.add(product, panel.querySelector('[data-quick-qty]').value);
+            closeQuickView();
+            window.DeColoresCart?.open();
+        };
+        panel.querySelector('[data-quick-whatsapp]').href = `https://wa.me/${config.contact?.whatsapp || ''}?text=${encodeURIComponent(`Hola, quiero consultar ${product.name}.`)}`;
+
+        if (validHexColor(product.color)) {
+            panel.querySelector('.quick-view__dialog').style.setProperty('--card-accent', product.color);
+        } else {
+            panel.querySelector('.quick-view__dialog').style.removeProperty('--card-accent');
+        }
+
+        panel.classList.add('is-open');
+        panel.setAttribute('aria-hidden', 'false');
+        panel.querySelector('[data-quick-close]').focus();
+    }
+
+    function closeQuickView() {
+        const panel = document.querySelector('.quick-view');
+        panel?.classList.remove('is-open');
+        panel?.setAttribute('aria-hidden', 'true');
+    }
+
+    function ensureQuickView() {
+        let panel = document.querySelector('.quick-view');
+        if (panel) return panel;
+
+        panel = document.createElement('aside');
+        panel.className = 'quick-view';
+        panel.setAttribute('aria-hidden', 'true');
+        panel.innerHTML = `
+            <div class="quick-view__backdrop" data-quick-close></div>
+            <div class="quick-view__dialog" role="dialog" aria-modal="true" aria-labelledby="quickViewTitle">
+                <button class="icon-button quick-view__close" type="button" aria-label="Cerrar vista rápida" data-quick-close>×</button>
+                <div class="quick-view__media">
+                    <img data-quick-image alt="">
+                </div>
+                <div class="quick-view__body">
+                    <div class="quick-view__meta">
+                        <span class="product-category" data-quick-category></span>
+                        <span class="product-status" data-quick-status></span>
+                    </div>
+                    <h3 id="quickViewTitle" data-quick-title></h3>
+                    <p data-quick-description></p>
+                    <div class="price-row quick-view__price">
+                        <strong data-quick-price></strong>
+                        <span data-quick-old-price hidden></span>
+                    </div>
+                    <p class="quick-view__stock" data-quick-stock></p>
+                    <label class="quick-view__qty">Cantidad
+                        <input data-quick-qty type="number" min="1" value="1">
+                    </label>
+                    <div class="quick-view__actions">
+                        <button class="buy-button" type="button" data-quick-add>Agregar al pedido</button>
+                        <a class="whatsapp-button" data-quick-whatsapp target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        panel.addEventListener('click', event => {
+            if (event.target instanceof Element && event.target.matches('[data-quick-close]')) closeQuickView();
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') closeQuickView();
+        });
+
+        document.body.appendChild(panel);
+        return panel;
     }
 
     function renderPagination(totalPages) {

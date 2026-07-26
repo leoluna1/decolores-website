@@ -95,13 +95,45 @@
                     <a class="cta-button" href="catalogo-productos.html">Ver catálogo</a>
                     <a class="secondary-button" href="#" data-whatsapp-link data-whatsapp-text="Hola, quiero ayuda para armar mi pedido de papelería.">Consultar por WhatsApp</a>
                 </div>
-                <form class="fluid-hero__waitlist" data-hero-reveal="form">
-                    <label class="sr-only" for="heroEmail">Correo electrónico</label>
+                <form class="fluid-hero__search" action="catalogo-productos.html" role="search" data-hero-reveal="form">
+                    <label class="sr-only" for="heroSearch">Buscar en catálogo</label>
                     <div class="fluid-hero__bar">
-                        <input id="heroEmail" type="email" placeholder="Recibe ofertas y novedades" autocomplete="email" required>
-                        <button class="pill-button" type="submit">Unirme</button>
+                        <input id="heroSearch" name="q" type="search" placeholder="Buscar cuadernos, colores, mochilas..." autocomplete="off">
+                        <button class="pill-button" type="submit">Buscar</button>
                     </div>
                 </form>
+                <nav class="hero-quick-links" aria-label="Búsquedas rápidas" data-hero-reveal="quick">
+                    <a href="catalogo-productos.html?categoria=escolares">Escolares</a>
+                    <a href="catalogo-productos.html?q=oferta">Ofertas</a>
+                    <a href="catalogo-productos.html?categoria=arte">Arte</a>
+                    <a href="catalogo-productos.html?categoria=oficina">Oficina</a>
+                    <a href="catalogo-productos.html?q=impresion">Impresión</a>
+                </nav>
+            </div>
+        </section>
+
+        <section class="home-trust-strip" aria-label="Ventajas de Papelería De Colores">
+            <div class="premium-shell home-trust-grid">
+                <article>
+                    <span aria-hidden="true">01</span>
+                    <strong>Pedido por WhatsApp</strong>
+                    <p>Arma tu lista y confirma stock sin llamadas largas.</p>
+                </article>
+                <article>
+                    <span aria-hidden="true">02</span>
+                    <strong>Listas escolares</strong>
+                    <p>Ayuda para completar útiles por grado o presupuesto.</p>
+                </article>
+                <article>
+                    <span aria-hidden="true">03</span>
+                    <strong>Oficinas e instituciones</strong>
+                    <p>Cotizaciones rápidas para compras recurrentes.</p>
+                </article>
+                <article>
+                    <span aria-hidden="true">04</span>
+                    <strong>Servicios de impresión</strong>
+                    <p>Copias, anillados y acabados para documentos.</p>
+                </article>
             </div>
         </section>
 
@@ -172,7 +204,7 @@
                     <h2>Productos listos para agregar a tu pedido.</h2>
                     <p>Precios referenciales. Confirma disponibilidad y entrega por WhatsApp.</p>
                 </div>
-                <div class="featured-grid">
+                <div class="featured-grid" data-home-featured>
                     <article class="featured-card">
                         <span class="product-status">Oferta</span>
                         <button class="favorite-button" type="button" aria-label="Guardar kit regreso a clases">♡</button>

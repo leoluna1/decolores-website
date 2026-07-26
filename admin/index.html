@@ -144,12 +144,12 @@
                     <div class="panel-heading">
                         <div>
                             <span class="kicker">Carga masiva</span>
-                            <h2>Importar CSV</h2>
+                            <h2>Importar inventario</h2>
                         </div>
                     </div>
                     <div class="csv-source-card">
-                        <label>Link CSV automático
-                            <input data-csv-url type="url" placeholder="https://docs.google.com/spreadsheets/d/...">
+                        <label>Link automático CSV, Excel o Google Sheets
+                            <input data-csv-url type="url" placeholder="https://docs.google.com/spreadsheets/d/... o inventario.xlsx">
                         </label>
                         <div class="csv-source-actions">
                             <button class="ghost" type="button" data-save-csv-url>Guardar link</button>
@@ -157,6 +157,10 @@
                         </div>
                         <p class="form-message" data-csv-message role="status"></p>
                     </div>
+                    <label class="import-file-field">Archivo CSV o Excel
+                        <input data-import-file type="file" accept=".csv,.tsv,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                        <span>Ideal para inventarios grandes. Se crean o actualizan productos por código/id.</span>
+                    </label>
                     <p>Pega filas CSV con columnas: nombre, categoria, marca, precio, stock, imagen, color opcional, descripcion.</p>
                     <textarea data-import-text rows="8" placeholder="Cuaderno,escolares,Norma,1.50,20,images/materiales/cuadernouni.png,#ef4444,Cuaderno universitario"></textarea>
                     <button type="button" data-import>Importar productos</button>
@@ -198,6 +202,7 @@
                                 <option value="active">Activos</option>
                                 <option value="hidden">Ocultos</option>
                                 <option value="low">Bajo stock</option>
+                                <option value="no-image">Sin imagen</option>
                                 <option value="offer">Ofertas</option>
                                 <option value="popular">Destacados</option>
                             </select>
@@ -218,6 +223,7 @@
                 <div class="quick-filter-bar" aria-label="Filtros rapidos">
                     <button class="ghost" type="button" data-quick-filter="active">Activos</button>
                     <button class="ghost" type="button" data-quick-filter="low">Bajo stock</button>
+                    <button class="ghost" type="button" data-quick-filter="no-image">Sin imagen</button>
                     <button class="ghost" type="button" data-quick-filter="offer">Ofertas</button>
                     <button class="ghost" type="button" data-quick-filter="popular">Destacados</button>
                     <button class="ghost" type="button" data-quick-filter="hidden">Ocultos</button>
@@ -237,6 +243,11 @@
                         </thead>
                         <tbody data-products-table></tbody>
                     </table>
+                </div>
+                <div class="admin-pagination" aria-label="Paginación de inventario">
+                    <button class="ghost" type="button" data-page-prev>Anterior</button>
+                    <span data-page-info>Pagina 1</span>
+                    <button class="ghost" type="button" data-page-next>Siguiente</button>
                 </div>
             </section>
         </section>

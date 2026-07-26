@@ -28,21 +28,22 @@
         updateCartUI();
     }
 
-    function addToCart(product) {
+    function addToCart(product, quantity = 1) {
         if (!product || !product.id) return;
 
         const items = getCart();
         const existing = items.find(item => item.id === product.id);
         const stock = Number(product.stock || 99);
+        const requestedQuantity = Math.max(1, Number(quantity || 1));
 
         if (existing) {
-            existing.quantity = Math.min(existing.quantity + 1, Math.max(stock, 1));
+            existing.quantity = Math.min(existing.quantity + requestedQuantity, Math.max(stock, 1));
         } else {
             items.push({
                 id: String(product.id),
                 name: String(product.name || 'Producto'),
                 price: Number(product.price || 0),
-                quantity: 1,
+                quantity: Math.min(requestedQuantity, Math.max(stock, 1)),
                 stock,
                 image: product.image || ''
             });
@@ -388,8 +389,8 @@
         });
     }
 
-    function bindGlobalActions() {
-        document.querySelectorAll('[data-whatsapp-link]').forEach(link => {
+    function syncWhatsappLinks(root = document) {
+        root.querySelectorAll('[data-whatsapp-link]').forEach(link => {
             const phone = config.contact?.whatsapp;
             if (!phone) return;
             const text = link.getAttribute('data-whatsapp-text') || 'Hola, quiero consultar productos de Papelería De Colores.';
@@ -397,6 +398,163 @@
             link.setAttribute('target', '_blank');
             link.setAttribute('rel', 'noopener noreferrer');
         });
+    }
+
+    function resolveImage(src) {
+        if (!src) return resolvePath('images/materiales/colores.png');
+        if (/^(https?:|data:|blob:)/.test(src)) return src;
+        return resolvePath(src);
+    }
+
+    function categoryLabel(category) {
+        const normalized = String(category || '').toLowerCase();
+        const match = (config.categories || []).find(item => item.id === normalized || item.name.toLowerCase() === normalized);
+        return match?.name || category || 'Papelería';
+    }
+
+    function normalizeHomeProduct(product, index = 0) {
+        const name = String(product.name || '').trim();
+        const price = Number(product.price || 0);
+        if (!name || !Number.isFinite(price)) return null;
+
+        return {
+            id: String(product.id || `home-${index}`),
+            name,
+            category: String(product.category || 'papeleria').toLowerCase(),
+            categoryLabel: categoryLabel(product.category),
+            brand: product.brand || 'De Colores',
+            price,
+            oldPrice: product.oldPrice == null ? null : Number(product.oldPrice),
+            status: String(product.status || (product.popular ? 'Destacado' : 'Disponible')),
+            description: String(product.description || 'Producto disponible para consultar en tienda.'),
+            stock: Number.parseInt(product.stock || 1, 10),
+            popular: Boolean(product.popular),
+            image: product.image || 'images/materiales/colores.png',
+            color: /^#[0-9a-f]{6}$/i.test(product.color || '') ? product.color : ''
+        };
+    }
+
+    async function loadHomeFeaturedProducts() {
+        const grid = document.querySelector('[data-home-featured]');
+        if (!grid) return;
+
+        let products = [];
+        try {
+            const response = await fetch(`/api/products?t=${Date.now()}`, {
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            products = (Array.isArray(data.products) ? data.products : [])
+                .map(normalizeHomeProduct)
+                .filter(Boolean)
+                .sort((a, b) => Number(b.popular) - Number(a.popular) || Number(b.stock > 0) - Number(a.stock > 0))
+                .slice(0, 6);
+        } catch {
+            products = (config.featuredProducts || []).map(normalizeHomeProduct).filter(Boolean).slice(0, 4);
+        }
+
+        if (!products.length) return;
+        grid.replaceChildren(...products.map(createHomeFeaturedCard));
+        syncWhatsappLinks(grid);
+    }
+
+    function createHomeFeaturedCard(product) {
+        const card = document.createElement('article');
+        card.className = 'featured-card';
+        card.dataset.category = product.category;
+        if (product.color) card.style.setProperty('--card-accent', product.color);
+
+        const status = document.createElement('span');
+        status.className = `product-status ${productStatusClass(product)}`;
+        status.textContent = productStatusLabel(product);
+
+        const favorite = document.createElement('button');
+        favorite.className = 'favorite-button';
+        favorite.type = 'button';
+        favorite.setAttribute('aria-label', `Guardar ${product.name}`);
+        favorite.textContent = '♡';
+
+        const image = document.createElement('img');
+        image.src = resolveImage(product.image);
+        image.alt = product.name;
+        image.loading = 'lazy';
+
+        const body = document.createElement('div');
+        body.className = 'featured-card__body';
+
+        const category = document.createElement('p');
+        category.className = 'product-category';
+        category.textContent = product.categoryLabel;
+
+        const title = document.createElement('h3');
+        title.textContent = product.name;
+
+        const description = document.createElement('p');
+        description.textContent = product.description;
+
+        const price = document.createElement('div');
+        price.className = 'price-row';
+        const current = document.createElement('strong');
+        current.textContent = formatMoney(product.price);
+        price.appendChild(current);
+        if (product.oldPrice && product.oldPrice > product.price) {
+            const old = document.createElement('span');
+            old.textContent = formatMoney(product.oldPrice);
+            const discount = document.createElement('em');
+            discount.textContent = `-${Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%`;
+            price.append(old, discount);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'product-actions';
+
+        const buy = document.createElement('button');
+        buy.className = 'buy-button';
+        buy.type = 'button';
+        buy.textContent = product.stock > 0 ? 'Comprar' : 'Consultar';
+        buy.disabled = product.stock <= 0;
+        buy.setAttribute('data-add-product', '');
+        buy.setAttribute('data-product-id', product.id);
+        buy.setAttribute('data-product-name', product.name);
+        buy.setAttribute('data-product-price', product.price);
+        buy.setAttribute('data-product-stock', product.stock || 99);
+        buy.setAttribute('data-product-image', product.image);
+
+        const whatsapp = document.createElement('a');
+        whatsapp.className = 'whatsapp-button';
+        whatsapp.textContent = 'WhatsApp';
+        whatsapp.href = '#';
+        whatsapp.setAttribute('data-whatsapp-link', '');
+        whatsapp.setAttribute('data-whatsapp-text', `Hola, quiero consultar ${product.name}.`);
+
+        actions.append(buy, whatsapp);
+        body.append(category, title, description, price, actions);
+        card.append(status, favorite, image, body);
+        return card;
+    }
+
+    function productStatusLabel(product) {
+        const status = String(product.status || '').trim();
+        if (product.stock <= 0) return 'Agotado';
+        if (product.stock <= 3) return 'Bajo stock';
+        if (/oferta/i.test(status)) return 'Oferta';
+        if (/nuevo/i.test(status)) return 'Nuevo';
+        if (product.popular) return 'Más pedido';
+        return 'Disponible';
+    }
+
+    function productStatusClass(product) {
+        const label = productStatusLabel(product);
+        if (label === 'Agotado') return 'product-status--soldout';
+        if (label === 'Bajo stock') return 'product-status--low';
+        if (label === 'Nuevo') return 'product-status--new';
+        if (label === 'Más pedido') return 'product-status--popular';
+        return 'product-status--available';
+    }
+
+    function bindGlobalActions() {
+        syncWhatsappLinks();
 
         document.querySelectorAll('[data-cart-open]').forEach(button => {
             button.addEventListener('click', openCart);
@@ -457,6 +615,7 @@
         const subline = hero.querySelector('[data-word-reveal="subline"]');
         const actions = hero.querySelector('.hero-actions');
         const formWrap = hero.querySelector('[data-hero-reveal="form"]');
+        const quickLinks = hero.querySelector('[data-hero-reveal="quick"]');
         const waitlistForm = hero.querySelector('.fluid-hero__waitlist');
         const canvas = hero.querySelector('canvas');
 
@@ -486,6 +645,7 @@
         window.setTimeout(() => subline?.classList.add('is-visible'), 1150);
         window.setTimeout(() => actions?.classList.add('is-visible'), 1320);
         window.setTimeout(() => formWrap?.classList.add('is-visible'), 1450);
+        window.setTimeout(() => quickLinks?.classList.add('is-visible'), 1570);
         window.setTimeout(() => footerNode?.classList.add('is-hero-visible'), 1650);
 
         waitlistForm?.addEventListener('submit', event => {
@@ -897,6 +1057,7 @@
     bindHeader();
     enhanceProductNavigation();
     bindGlobalActions();
+    loadHomeFeaturedProducts();
     bindReveal();
     ensureCartPanel();
     updateCartUI();

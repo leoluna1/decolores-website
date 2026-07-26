@@ -51,13 +51,14 @@ Funciones actuales del admin:
 - Procesar links de imagen para descargarlos, quitar fondo blanco y guardar una copia local.
 - Detectar un color dominante de la imagen y usarlo como color automatico de la tarjeta en el catalogo.
 - Filtrar inventario por busqueda, categoria, activos, ocultos y bajo stock.
-- Importar productos desde CSV simple.
-- Guardar un link CSV externo y sincronizar productos desde ese link.
+- Filtrar productos sin imagen real para completar fotos desde el admin.
+- Importar productos desde CSV simple o Excel `.xlsx`.
+- Guardar un link CSV, Google Sheets o Excel `.xlsx` y sincronizar productos desde ese link.
 - Exportar inventario a CSV.
 
-### Sincronizar productos desde un link CSV
+### Sincronizar productos desde CSV, Excel o Google Sheets
 
-El cliente puede mantener los productos en Google Sheets u otro CSV publico. El servidor descarga ese CSV, crea o actualiza productos en `data/decolores.sqlite`, y el catalogo publico los lee desde `/api/products`.
+El cliente puede mantener los productos en Google Sheets, CSV publico o Excel `.xlsx` publico. El servidor descarga ese inventario, crea o actualiza productos en `data/decolores.sqlite`, y el catalogo publico los lee desde `/api/products`.
 
 Columnas recomendadas:
 
@@ -69,12 +70,15 @@ Tambien acepta nombres comunes como `producto`, `detalle`, `pvp`, `existencia`, 
 
 Opciones de configuracion:
 
-- Desde el admin: entra a `/admin`, pega el link en `Link CSV automatico`, guarda y pulsa `Sincronizar ahora`.
-- Desde produccion: define `PRODUCT_CSV_URL` con el link del CSV.
+- Desde el admin: entra a `/admin`, pega el link en `Link automatico CSV, Excel o Google Sheets`, guarda y pulsa `Sincronizar ahora`.
+- Desde el admin tambien puedes subir un archivo `.csv`, `.tsv` o `.xlsx` desde `Archivo CSV o Excel`.
+- Desde produccion: define `PRODUCT_CSV_URL` con el link del inventario.
 - Para sincronizar al iniciar el servidor: `PRODUCT_CSV_SYNC_ON_START=1`.
 - Para sincronizar cada cierto tiempo: `PRODUCT_CSV_SYNC_INTERVAL_MINUTES=30` o el intervalo que prefieras.
 
 Para Google Sheets, comparte la hoja como publica o publicada en la web. Puedes pegar el link normal de la hoja; el servidor lo convierte al formato CSV cuando detecta `docs.google.com/spreadsheets`.
+
+Si un producto ya existe y el nuevo CSV/Excel viene sin `imagen` o `color`, el admin conserva la imagen y el color que se hayan agregado manualmente. Asi puedes importar miles de productos, completar fotos desde el admin y volver a sincronizar precios/stock sin borrar ese trabajo visual.
 
 ### Imagenes de productos
 
@@ -95,6 +99,30 @@ Variables opcionales:
 ### Publicar
 
 La parte publica puede publicarse como sitio estatico. Para usar el panel admin necesitas publicar el servidor Node (`npm start`) en un VPS, NAS, Render, Railway, Fly.io u otro hosting que ejecute Node 24+.
+
+Para conservar productos, SQLite e imagenes subidas despues de cada deploy, usa un volumen/disco persistente y configura:
+
+```bash
+STORAGE_DIR=/var/data
+ADMIN_USER=admin
+ADMIN_PASSWORD="cambia-esta-clave"
+SESSION_SECRET="clave-larga-random"
+npm start
+```
+
+`STORAGE_DIR` guarda `data/`, `uploads/` y `backups/`. Si el hosting exige rutas separadas tambien puedes usar `DATA_DIR` y `UPLOAD_ROOT`.
+
+Backup manual:
+
+```bash
+npm run backup
+```
+
+Recomendacion de hosting:
+
+- Render o Railway para una publicacion simple con Node y volumen persistente.
+- Fly.io si quieres mas control tecnico.
+- Vercel/Netlify solo si separas el admin y el almacenamiento en servicios externos.
 
 ### Configuración
 

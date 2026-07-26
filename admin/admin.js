@@ -4,7 +4,9 @@ const state = {
     search: '',
     category: 'all',
     active: 'all',
-    sort: 'updated'
+    sort: 'updated',
+    page: 1,
+    pageSize: 80
 };
 
 const CATEGORY_LABELS = {
@@ -17,6 +19,18 @@ const CATEGORY_LABELS = {
     regalos: 'Regalos',
     impresion: 'Impresion',
     accesorios: 'Accesorios'
+};
+
+const CATEGORY_IMAGES = {
+    escolares: 'images/materiales/mochila-escolar-con-suministros-de-estudiantes.jpg',
+    oficina: 'images/materiales/49-Archivador-Artesco-2.png',
+    arte: 'images/materiales/colores.png',
+    papeleria: 'images/materiales/papel bond.png',
+    tecnologia: 'images/tecnologia/calculadora-cs-bols-hl-4a-neg.png',
+    libros: 'images/materiales/libreta.png',
+    regalos: 'images/materiales/cartuchera.jpg',
+    impresion: 'images/materiales/papel bond.png',
+    accesorios: 'images/materiales/cartuchera.jpg'
 };
 
 const nodes = {
@@ -34,12 +48,16 @@ const nodes = {
     sortFilter: document.querySelector('[data-sort-filter]'),
     clearFilters: document.querySelector('[data-clear-filters]'),
     quickFilters: document.querySelectorAll('[data-quick-filter]'),
+    pagePrev: document.querySelector('[data-page-prev]'),
+    pageNext: document.querySelector('[data-page-next]'),
+    pageInfo: document.querySelector('[data-page-info]'),
     resultCount: document.querySelector('[data-result-count]'),
     statView: document.querySelector('[data-stat-view]'),
     csvUrl: document.querySelector('[data-csv-url]'),
     csvMessage: document.querySelector('[data-csv-message]'),
     saveCsvUrl: document.querySelector('[data-save-csv-url]'),
     syncCsv: document.querySelector('[data-sync-csv]'),
+    importFile: document.querySelector('[data-import-file]'),
     importText: document.querySelector('[data-import-text]'),
     importMessage: document.querySelector('[data-import-message]'),
     imageFile: document.querySelector('[data-image-file]'),
@@ -98,21 +116,25 @@ function bindEvents() {
 
     nodes.search.addEventListener('input', event => {
         state.search = event.target.value;
+        state.page = 1;
         renderProducts();
     });
 
     nodes.categoryFilter.addEventListener('change', event => {
         state.category = event.target.value;
+        state.page = 1;
         renderProducts();
     });
 
     nodes.activeFilter.addEventListener('change', event => {
         state.active = event.target.value;
+        state.page = 1;
         renderProducts();
     });
 
     nodes.sortFilter.addEventListener('change', event => {
         state.sort = event.target.value;
+        state.page = 1;
         renderProducts();
     });
 
@@ -122,8 +144,19 @@ function bindEvents() {
         button.addEventListener('click', () => {
             state.active = button.dataset.quickFilter || 'all';
             nodes.activeFilter.value = state.active;
+            state.page = 1;
             renderProducts();
         });
+    });
+
+    nodes.pagePrev.addEventListener('click', () => {
+        state.page = Math.max(1, state.page - 1);
+        renderProducts();
+    });
+
+    nodes.pageNext.addEventListener('click', () => {
+        state.page += 1;
+        renderProducts();
     });
 
     document.addEventListener('keydown', event => {
@@ -142,6 +175,7 @@ function bindEvents() {
             event.preventDefault();
             nodes.search.value = '';
             state.search = '';
+            state.page = 1;
             renderProducts();
         }
     });
@@ -154,6 +188,7 @@ function bindEvents() {
 
     nodes.saveCsvUrl.addEventListener('click', saveCsvUrl);
     nodes.syncCsv.addEventListener('click', syncCsvSource);
+    nodes.importFile.addEventListener('change', importInventoryFile);
 
     document.querySelector('[data-import]').addEventListener('click', async () => {
         const products = parseImport(nodes.importText.value);
@@ -219,14 +254,14 @@ async function saveCsvUrl() {
             body: { url: nodes.csvUrl.value.trim() }
         });
         nodes.csvUrl.value = result.url || '';
-        setMessage(nodes.csvMessage, result.url ? 'Link CSV guardado.' : 'Link CSV eliminado.');
+        setMessage(nodes.csvMessage, result.url ? 'Link de inventario guardado.' : 'Link de inventario eliminado.');
     } catch (error) {
         setMessage(nodes.csvMessage, error.message, true);
     }
 }
 
 async function syncCsvSource() {
-    setMessage(nodes.csvMessage, 'Sincronizando productos desde CSV...');
+    setMessage(nodes.csvMessage, 'Sincronizando productos desde inventario...');
     nodes.syncCsv.disabled = true;
     try {
         const result = await api('/api/products/sync-csv', {
@@ -242,6 +277,30 @@ async function syncCsvSource() {
     }
 }
 
+async function importInventoryFile() {
+    const file = nodes.importFile.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    setMessage(nodes.importMessage, `Importando ${file.name}...`);
+
+    try {
+        const response = await fetch('/api/products/import-file', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'No se pudo importar el archivo.');
+        setMessage(nodes.importMessage, `Archivo importado. Filas: ${result.rows}. Creados: ${result.created}. Actualizados: ${result.updated}. Errores: ${result.errors.length}.`);
+        await loadProducts();
+    } catch (error) {
+        setMessage(nodes.importMessage, error.message, true);
+    } finally {
+        nodes.importFile.value = '';
+    }
+}
+
 function renderProducts() {
     const products = sortProducts(state.products.filter(product => {
         const terms = searchTerms();
@@ -251,16 +310,22 @@ function renderProducts() {
             (state.active === 'active' && product.active) ||
             (state.active === 'hidden' && !product.active) ||
             (state.active === 'low' && product.active && product.stock <= 3) ||
+            (state.active === 'no-image' && !hasCustomImage(product)) ||
             (state.active === 'offer' && product.active && /oferta/i.test(product.status)) ||
             (state.active === 'popular' && product.active && product.popular);
 
         return matchesSearch && matchesCategory && matchesActive;
     }));
 
+    const totalPages = Math.max(1, Math.ceil(products.length / state.pageSize));
+    state.page = Math.min(Math.max(state.page, 1), totalPages);
+    const pageProducts = products.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+
     updateInventoryMeta(products.length);
+    updatePagination(products.length, totalPages);
     syncQuickFilters();
 
-    if (!products.length) {
+    if (!pageProducts.length) {
         const row = document.createElement('tr');
         row.className = 'empty-row';
         row.innerHTML = '<td colspan="7">No hay productos con esos filtros.</td>';
@@ -268,7 +333,7 @@ function renderProducts() {
         return;
     }
 
-    nodes.table.replaceChildren(...products.map(product => {
+    nodes.table.replaceChildren(...pageProducts.map(product => {
         const row = document.createElement('tr');
         row.dataset.productId = product.id;
         row.innerHTML = `
@@ -341,8 +406,15 @@ function searchIndex(product) {
         money(product.price),
         product.stock,
         product.active ? 'activo visible disponible' : 'oculto inactivo',
+        hasCustomImage(product) ? 'con imagen foto' : 'sin imagen sin foto',
         product.popular ? 'destacado popular' : ''
     ].join(' '));
+}
+
+function hasCustomImage(product) {
+    const image = String(product.image || '').trim();
+    const fallback = CATEGORY_IMAGES[product.category] || CATEGORY_IMAGES.papeleria;
+    return Boolean(image) && image !== fallback;
 }
 
 function sortProducts(products) {
@@ -391,6 +463,7 @@ function updateInventoryMeta(visible) {
         active: 'activos',
         hidden: 'ocultos',
         low: 'con bajo stock',
+        'no-image': 'sin imagen real',
         offer: 'en oferta',
         popular: 'destacados'
     }[state.active] || '';
@@ -408,10 +481,21 @@ function syncQuickFilters() {
     });
 }
 
+function updatePagination(total, totalPages) {
+    const start = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
+    const end = Math.min(total, state.page * state.pageSize);
+    nodes.pageInfo.textContent = total
+        ? `Pagina ${state.page} de ${totalPages} · ${start}-${end} de ${total}`
+        : 'Sin resultados';
+    nodes.pagePrev.disabled = state.page <= 1;
+    nodes.pageNext.disabled = state.page >= totalPages;
+}
+
 function renderTags(node, product) {
     const tags = [];
     if (product.popular) tags.push('Destacado');
     if (product.active && product.stock <= 3) tags.push('Bajo stock');
+    if (!hasCustomImage(product)) tags.push('Sin imagen');
     if (!product.active) tags.push('Oculto');
 
     node.replaceChildren(...tags.map(text => {
@@ -427,6 +511,7 @@ function clearFilters() {
     state.category = 'all';
     state.active = 'all';
     state.sort = 'updated';
+    state.page = 1;
     nodes.search.value = '';
     nodes.categoryFilter.value = state.category;
     nodes.activeFilter.value = state.active;

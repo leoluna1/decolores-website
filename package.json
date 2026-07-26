@@ -5,10 +5,12 @@
   "description": "Sitio y panel admin para Papeleria De Colores.",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "backup": "node scripts/backup-data.js"
   },
   "dependencies": {
     "express": "^5.1.0",
+    "fflate": "^0.8.3",
     "multer": "^2.2.0",
     "sharp": "^0.35.3"
   },

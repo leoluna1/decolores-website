@@ -4,13 +4,16 @@ const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
 const sharp = require('sharp');
+const { unzipSync, strFromU8 } = require('fflate');
 const { DatabaseSync } = require('node:sqlite');
 
 const app = express();
 const PORT = Number(process.env.PORT || 4173);
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, 'data');
-const UPLOAD_DIR = path.join(ROOT, 'uploads', 'products');
+const STORAGE_DIR = process.env.STORAGE_DIR ? path.resolve(process.env.STORAGE_DIR) : ROOT;
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(STORAGE_DIR, 'data');
+const UPLOAD_ROOT = process.env.UPLOAD_ROOT ? path.resolve(process.env.UPLOAD_ROOT) : path.join(STORAGE_DIR, 'uploads');
+const UPLOAD_DIR = path.join(UPLOAD_ROOT, 'products');
 const DB_PATH = path.join(DATA_DIR, 'decolores.sqlite');
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
@@ -23,6 +26,7 @@ const UPLOAD_REMOVE_WHITE_BG = process.env.UPLOAD_REMOVE_WHITE_BG !== '0';
 const UPLOAD_WHITE_BG_THRESHOLD = clampNumber(process.env.UPLOAD_WHITE_BG_THRESHOLD, 220, 255, 245);
 const UPLOAD_WHITE_BG_TOLERANCE = clampNumber(process.env.UPLOAD_WHITE_BG_TOLERANCE, 0, 80, 24);
 const MAX_PRODUCT_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_SPREADSHEET_BYTES = 12 * 1024 * 1024;
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -35,6 +39,15 @@ const upload = multer({
     limits: { fileSize: MAX_PRODUCT_IMAGE_BYTES },
     fileFilter: (req, file, cb) => {
         if (!safeImageExtension(file)) return cb(new Error('Solo se permiten imagenes JPG, PNG, WebP o GIF.'));
+        cb(null, true);
+    }
+});
+
+const spreadsheetUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_SPREADSHEET_BYTES },
+    fileFilter: (req, file, cb) => {
+        if (!spreadsheetTypeFromFile(file)) return cb(new Error('Solo se permiten archivos CSV, TSV o Excel XLSX.'));
         cb(null, true);
     }
 });
@@ -141,6 +154,22 @@ app.post('/api/products/import', requireAdmin, (req, res) => {
     res.json(importProducts(rows));
 });
 
+app.post('/api/products/import-file', requireAdmin, (req, res) => {
+    spreadsheetUpload.single('file')(req, res, async error => {
+        if (error) return res.status(400).json({ error: error.message });
+        if (!req.file) return res.status(400).json({ error: 'Selecciona un archivo CSV o Excel.' });
+
+        try {
+            const products = await parseSpreadsheetFile(req.file);
+            if (!products.length) throw new Error('El archivo no contiene productos validos.');
+            const result = importProducts(products);
+            res.json({ ...result, rows: products.length, filename: req.file.originalname || '' });
+        } catch (parseError) {
+            res.status(400).json({ error: parseError.message });
+        }
+    });
+});
+
 app.get('/api/products/csv-source', requireAdmin, (req, res) => {
     res.json({
         url: getCsvSourceUrl(),
@@ -152,7 +181,7 @@ app.get('/api/products/csv-source', requireAdmin, (req, res) => {
 
 app.post('/api/products/csv-source', requireAdmin, (req, res) => {
     const url = clean(req.body.url, 1000);
-    if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link CSV valido http/https.' });
+    if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link de inventario valido http/https.' });
 
     setSetting('product_csv_url', url);
     res.json({ ok: true, url: getCsvSourceUrl() });
@@ -162,7 +191,7 @@ app.post('/api/products/sync-csv', requireAdmin, async (req, res) => {
     try {
         if (req.body.url !== undefined) {
             const url = clean(req.body.url, 1000);
-            if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link CSV valido http/https.' });
+            if (url && !isAllowedCsvUrl(url)) return res.status(400).json({ error: 'Ingresa un link de inventario valido http/https.' });
             setSetting('product_csv_url', url);
         }
 
@@ -207,7 +236,7 @@ app.use((req, res, next) => {
     if (PRIVATE_PATH_RE.test(req.path)) return res.status(404).send('Not found');
     next();
 });
-app.use('/uploads', express.static(path.join(ROOT, 'uploads'), {
+app.use('/uploads', express.static(UPLOAD_ROOT, {
     fallthrough: false,
     setHeaders(res) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -328,7 +357,14 @@ function importProducts(rows) {
             try {
                 const product = normalizeProduct(raw);
                 product.id = uniqueId(product.id || slugify(product.name), { allowExisting: true });
-                if (getProduct(product.id, true)) {
+                const existing = getProduct(product.id, true);
+                if (existing) {
+                    if (raw._preserveExistingImage && hasCustomStoredImage(existing)) {
+                        product.image = existing.image;
+                    }
+                    if (raw._preserveExistingColor && existing.color) {
+                        product.color = existing.color;
+                    }
                     updateProduct(product);
                     updated += 1;
                 } else {
@@ -346,26 +382,16 @@ function importProducts(rows) {
 
 async function syncProductsFromCsv() {
     const url = getCsvSourceUrl();
-    if (!url) throw new Error('Configura primero el link CSV de productos.');
-    if (!isAllowedCsvUrl(url)) throw new Error('El link CSV configurado no es valido.');
+    if (!url) throw new Error('Configura primero el link de inventario.');
+    if (!isAllowedCsvUrl(url)) throw new Error('El link de inventario configurado no es valido.');
 
-    const csvUrl = normalizeCsvUrl(url);
-    const response = await fetch(csvUrl, {
-        headers: {
-            Accept: 'text/csv,text/plain,*/*',
-            'User-Agent': 'decolores-product-sync/1.0'
-        }
-    });
-
-    if (!response.ok) throw new Error(`No se pudo descargar el CSV. HTTP ${response.status}.`);
-
-    const csvText = await response.text();
-    const products = parseCsvProducts(csvText);
-    if (!products.length) throw new Error('El CSV no contiene productos validos.');
+    const source = await downloadRemoteSpreadsheetSource(url);
+    const products = await parseSpreadsheetSource(source);
+    if (!products.length) throw new Error('El archivo no contiene productos validos.');
 
     const result = importProducts(products);
     const syncedAt = new Date().toISOString();
-    const summary = `CSV sincronizado. Filas validas: ${products.length}. Creados: ${result.created}. Actualizados: ${result.updated}. Errores: ${result.errors.length}.`;
+    const summary = `Inventario sincronizado. Tipo: ${source.type.toUpperCase()}. Filas validas: ${products.length}. Creados: ${result.created}. Actualizados: ${result.updated}. Errores: ${result.errors.length}.`;
     setSetting('product_csv_last_sync', syncedAt);
     setSetting('product_csv_last_summary', summary);
 
@@ -374,6 +400,10 @@ async function syncProductsFromCsv() {
 
 function parseCsvProducts(csvText) {
     const rows = parseCsvRows(csvText);
+    return parseProductRows(rows);
+}
+
+function parseProductRows(rows) {
     if (rows.length < 2) return [];
 
     const header = buildCsvHeader(rows[0]);
@@ -382,6 +412,156 @@ function parseCsvProducts(csvText) {
     return dataRows
         .map((cols, index) => csvRowToProduct(cols, header.index, index))
         .filter(Boolean);
+}
+
+async function parseSpreadsheetFile(file) {
+    const type = spreadsheetTypeFromFile(file);
+    if (!type) throw new Error('Formato de inventario no soportado.');
+    return parseSpreadsheetSource({ type, buffer: file.buffer });
+}
+
+async function parseSpreadsheetSource(source) {
+    if (source.type === 'xlsx') {
+        const rows = parseXlsxRows(source.buffer);
+        return parseProductRows(rows.map(row => row.map(spreadsheetCellText)));
+    }
+
+    const text = source.buffer.toString('utf8');
+    if (source.type === 'tsv') return parseProductRows(parseDelimitedRows(text, '\t'));
+    return parseCsvProducts(text);
+}
+
+function parseXlsxRows(buffer) {
+    let files;
+    try {
+        files = unzipSync(new Uint8Array(buffer));
+    } catch {
+        throw new Error('El archivo Excel no se pudo abrir. Verifica que sea .xlsx.');
+    }
+
+    const workbookXml = xlsxText(files, 'xl/workbook.xml');
+    const relationId = xlsxAttr(workbookXml.match(/<sheet\b[^>]*>/)?.[0] || '', 'r:id') ||
+        xlsxAttr(workbookXml.match(/<sheet\b[^>]*>/)?.[0] || '', 'id');
+    if (!relationId) throw new Error('El Excel no contiene una hoja valida.');
+
+    const relsXml = xlsxText(files, 'xl/_rels/workbook.xml.rels');
+    const relationship = [...relsXml.matchAll(/<Relationship\b[^>]*>/g)]
+        .map(match => match[0])
+        .find(tag => xlsxAttr(tag, 'Id') === relationId);
+    if (!relationship) throw new Error('No se encontro la hoja principal del Excel.');
+
+    const target = xlsxAttr(relationship, 'Target');
+    const sheetPath = path.posix.normalize(target.startsWith('/')
+        ? target.slice(1)
+        : target.startsWith('xl/')
+            ? target
+            : `xl/${target}`);
+    const sheetXml = xlsxText(files, sheetPath);
+    const sharedStrings = parseXlsxSharedStrings(files);
+    const rows = [];
+
+    for (const rowMatch of sheetXml.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)) {
+        const cells = [];
+        let nextColumn = 0;
+        for (const cellMatch of rowMatch[1].matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
+            const attrs = cellMatch[1];
+            const cellRef = xlsxAttr(attrs, 'r');
+            const columnIndex = cellRef ? xlsxColumnIndex(cellRef) : nextColumn;
+            cells[columnIndex] = xlsxCellValue(attrs, cellMatch[2], sharedStrings);
+            nextColumn = columnIndex + 1;
+        }
+        if (cells.some(value => value !== '')) rows.push(cells.map(value => value ?? ''));
+    }
+
+    return rows;
+}
+
+function parseXlsxSharedStrings(files) {
+    if (!files['xl/sharedStrings.xml']) return [];
+    const xml = xlsxText(files, 'xl/sharedStrings.xml');
+    return [...xml.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)]
+        .map(match => xlsxTextNodes(match[1]));
+}
+
+function xlsxCellValue(attrs, innerXml, sharedStrings) {
+    const type = xlsxAttr(attrs, 't');
+    if (type === 'inlineStr') return xlsxTextNodes(innerXml);
+
+    const value = xlsxTagText(innerXml, 'v');
+    if (type === 's') return sharedStrings[Number(value)] || '';
+    if (type === 'b') return value === '1' ? 'TRUE' : 'FALSE';
+    return value;
+}
+
+function xlsxText(files, filename) {
+    const file = files[filename];
+    if (!file) throw new Error(`El Excel no contiene ${filename}.`);
+    return strFromU8(file);
+}
+
+function xlsxAttr(tag, attr) {
+    const match = tag.match(new RegExp(`(?:^|\\s)${escapeRegExp(attr)}=(?:"([^"]*)"|'([^']*)')`));
+    return match ? decodeXml(match[1] ?? match[2]) : '';
+}
+
+function xlsxTagText(xml, tagName) {
+    const match = xml.match(new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`));
+    return match ? decodeXml(match[1]) : '';
+}
+
+function xlsxTextNodes(xml) {
+    return [...xml.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)]
+        .map(match => decodeXml(match[1]))
+        .join('');
+}
+
+function xlsxColumnIndex(cellRef) {
+    const letters = String(cellRef || '').match(/[A-Z]+/i)?.[0] || 'A';
+    return letters.toUpperCase().split('').reduce((index, letter) => index * 26 + letter.charCodeAt(0) - 64, 0) - 1;
+}
+
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function decodeXml(value) {
+    return String(value || '')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+}
+
+function spreadsheetCellText(value) {
+    if (value == null) return '';
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return cleanCsvCell(String(value));
+}
+
+function spreadsheetTypeFromFile(file) {
+    return spreadsheetTypeFromContent(file.mimetype) || spreadsheetTypeFromUrl(file.originalname || '');
+}
+
+function spreadsheetTypeFromContent(contentType) {
+    const type = String(contentType || '').split(';')[0].trim().toLowerCase();
+    if (type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') return 'xlsx';
+    if (type === 'text/tab-separated-values') return 'tsv';
+    if (type === 'text/csv' || type === 'text/plain' || type === 'application/csv' || type === 'application/vnd.ms-excel') return 'csv';
+    return '';
+}
+
+function spreadsheetTypeFromUrl(url) {
+    try {
+        const pathname = url.includes('://') ? new URL(url).pathname : url;
+        const ext = path.extname(pathname).toLowerCase();
+        if (ext === '.xlsx') return 'xlsx';
+        if (ext === '.tsv') return 'tsv';
+        if (ext === '.csv' || ext === '.txt') return 'csv';
+        return '';
+    } catch {
+        return '';
+    }
 }
 
 function parseCsvRows(csvText) {
@@ -420,6 +600,13 @@ function parseCsvRows(csvText) {
     return rows
         .map(csvRow => csvRow.map(value => cleanCsvCell(value)))
         .filter(csvRow => csvRow.some(Boolean));
+}
+
+function parseDelimitedRows(text, delimiter) {
+    return String(text || '')
+        .split(/\r?\n/)
+        .map(line => line.split(delimiter).map(value => cleanCsvCell(value)))
+        .filter(row => row.some(Boolean));
 }
 
 function buildCsvHeader(firstRow) {
@@ -483,6 +670,8 @@ function csvRowToProduct(cols, index, rowIndex) {
 
     const category = normalizeCategory(get('category') || inferCategory(name));
     const stock = parseCsvInteger(get('stock'));
+    const image = clean(get('image'), 220);
+    const color = normalizeHexColor(get('color'));
 
     return {
         id: clean(get('id'), 80) || slugify(name) || `csv-${rowIndex + 1}`,
@@ -492,12 +681,14 @@ function csvRowToProduct(cols, index, rowIndex) {
         price,
         oldPrice: parseCsvNumber(get('oldPrice')),
         stock: stock == null ? 1 : stock,
-        image: clean(get('image'), 220) || categoryImage(category),
-        color: normalizeHexColor(get('color')),
+        image: image || categoryImage(category),
+        color,
         description: clean(get('description'), 280) || 'Producto disponible para consultar en tienda.',
         status: clean(get('status'), 40) || (stock === 0 ? 'Agotado' : 'Disponible'),
         popular: get('popular') ? truthy(get('popular')) : rowIndex < 12,
-        active: get('active') ? truthy(get('active')) : true
+        active: get('active') ? truthy(get('active')) : true,
+        _preserveExistingImage: !image,
+        _preserveExistingColor: !color
     };
 }
 
@@ -567,6 +758,30 @@ function isAllowedCsvUrl(url) {
     } catch {
         return false;
     }
+}
+
+async function downloadRemoteSpreadsheetSource(url) {
+    const sourceUrl = normalizeCsvUrl(url);
+    const response = await fetch(sourceUrl, {
+        headers: {
+            Accept: 'text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*',
+            'User-Agent': 'decolores-product-sync/1.0'
+        },
+        signal: AbortSignal.timeout(20000)
+    });
+
+    if (!response.ok) throw new Error(`No se pudo descargar el inventario. HTTP ${response.status}.`);
+
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_SPREADSHEET_BYTES) throw new Error('El archivo de inventario supera 12MB.');
+
+    const contentType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    const type = spreadsheetTypeFromContent(contentType)
+        || spreadsheetTypeFromUrl(response.url || sourceUrl)
+        || spreadsheetTypeFromUrl(sourceUrl)
+        || 'csv';
+    const buffer = await readLimitedResponseBuffer(response, MAX_SPREADSHEET_BYTES, 'El archivo de inventario supera 12MB.');
+    return { type, buffer };
 }
 
 function normalizeCsvUrl(url) {
@@ -833,15 +1048,15 @@ async function downloadRemoteProductImage(rawUrl) {
     const mimetype = imageMimeFromContentType(contentType) || imageMimeFromUrl(responseUrl) || imageMimeFromUrl(url);
     if (!mimetype) throw new Error('El link debe apuntar a una imagen JPG, PNG, WebP o GIF.');
 
-    const buffer = await readImageResponseBuffer(response);
+    const buffer = await readLimitedResponseBuffer(response, MAX_PRODUCT_IMAGE_BYTES, 'La imagen del link supera 3MB.');
     const originalname = imageNameFromUrl(responseUrl, mimetype);
     return { buffer, mimetype, originalname };
 }
 
-async function readImageResponseBuffer(response) {
+async function readLimitedResponseBuffer(response, maxBytes, sizeMessage) {
     if (!response.body?.getReader) {
         const buffer = Buffer.from(await response.arrayBuffer());
-        if (buffer.length > MAX_PRODUCT_IMAGE_BYTES) throw new Error('La imagen del link supera 3MB.');
+        if (buffer.length > maxBytes) throw new Error(sizeMessage);
         return buffer;
     }
 
@@ -853,9 +1068,9 @@ async function readImageResponseBuffer(response) {
         const { done, value } = await reader.read();
         if (done) break;
         total += value.byteLength;
-        if (total > MAX_PRODUCT_IMAGE_BYTES) {
+        if (total > maxBytes) {
             reader.cancel().catch(() => {});
-            throw new Error('La imagen del link supera 3MB.');
+            throw new Error(sizeMessage);
         }
         chunks.push(Buffer.from(value));
     }
@@ -1007,6 +1222,10 @@ function categoryImage(category) {
         accesorios: 'images/materiales/cartuchera.jpg'
     };
     return images[category] || images.papeleria;
+}
+
+function hasCustomStoredImage(product) {
+    return Boolean(product.image && product.image !== categoryImage(product.category));
 }
 
 function seedProducts() {
