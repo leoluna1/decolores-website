@@ -9,7 +9,7 @@
         currentPage: 1,
         itemsPerPage: 12,
         query: new URLSearchParams(window.location.search).get('q') || '',
-        category: 'all',
+        category: new URLSearchParams(window.location.search).get('categoria') || 'all',
         minPrice: '',
         maxPrice: '',
         availability: 'all',
@@ -23,7 +23,8 @@
         arte: { name: 'Arte y manualidades', description: 'Color, pintura y materiales para proyectos creativos.' },
         papeleria: { name: 'Papelería', description: 'Papel, sobres, etiquetas y productos de uso diario.' },
         tecnologia: { name: 'Tecnología', description: 'Calculadoras, almacenamiento y accesorios.' },
-        libros: { name: 'Libros y lectura', description: 'Material educativo y lectura complementaria.' }
+        libros: { name: 'Libros y lectura', description: 'Material educativo y lectura complementaria.' },
+        regalos: { name: 'Regalos y decoración', description: 'Detalles, empaques y productos para ocasiones especiales.' }
     };
 
     const fallbackProducts = (config.featuredProducts || []).map((product, index) => ({
@@ -60,20 +61,25 @@
         return String(text || '').replace(/^["']|["']$/g, '').trim().slice(0, 280);
     }
 
+    function normalizeText(value) {
+        return clean(value)
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
     function normalizeCategory(value) {
-        const normalized = clean(value).toLowerCase();
+        const normalized = normalizeText(value);
         const map = {
             escolares: 'escolares',
             escolar: 'escolares',
-            'útiles': 'escolares',
+            utiles: 'escolares',
             oficina: 'oficina',
-            'artículos': 'oficina',
+            articulos: 'oficina',
             arte: 'arte',
             manualidades: 'arte',
             papeleria: 'papeleria',
-            'papelería': 'papeleria',
             tecnologia: 'tecnologia',
-            'tecnología': 'tecnologia',
             tech: 'tecnologia',
             libros: 'libros',
             lectura: 'libros'
@@ -82,52 +88,129 @@
         return map[normalized] || normalized || 'oficina';
     }
 
-    function parseCSVLine(line) {
-        const result = [];
-        let current = '';
+    function inferCategory(name) {
+        const text = normalizeText(name);
+        const groups = [
+            ['tecnologia', ['calculadora', 'usb', 'pendrive', 'mouse', 'cable', 'audifono', 'parlante', 'dvd', 'cd ', 'cargador', 'teclado']],
+            ['arte', ['pintura', 'acuarela', 'acrilica', 'pincel', 'tempera', 'crayon', 'color', 'colores', 'cartulina', 'foamy', 'fomix', 'plastilina', 'marcador']],
+            ['escolares', ['cuaderno', 'lapiz', 'lapices', 'mochila', 'cartuchera', 'regla', 'compas', 'abaco', 'borrador', 'sacapunta', 'escuadra', 'transportador', 'goma']],
+            ['oficina', ['archivador', 'carpeta', 'folder', 'grapa', 'grapadora', 'clip', 'perforadora', 'boligrafo', 'resaltador', 'papel bond', 'sobre', 'etiqueta']],
+            ['libros', ['libro', 'cuento', 'diccionario', 'atlas', 'lectura']],
+            ['papeleria', ['papel', 'carton', 'afiche', 'formulario', 'factura', 'recibo', 'adhesivo']],
+            ['regalos', ['adorno', 'regalo', 'navideno', 'navidad', 'globo', 'cinta', 'mono', 'decoracion']]
+        ];
+        const match = groups.find(([, keywords]) => keywords.some(keyword => text.includes(keyword)));
+        return match ? match[0] : 'papeleria';
+    }
+
+    function parseMoney(value) {
+        const normalized = String(value || '')
+            .replace(/\s+/g, '')
+            .replace(/\$/g, '')
+            .replace(/,/g, '.')
+            .replace(/[^\d.-]/g, '');
+        const number = Number.parseFloat(normalized);
+        return Number.isFinite(number) && number > 0 ? number : null;
+    }
+
+    function normalizeHeader(value) {
+        return normalizeText(value).replace(/[^a-z0-9]/g, '');
+    }
+
+    function parseCSVRows(csvText) {
+        const rows = [];
+        let row = [];
+        let cell = '';
         let inQuotes = false;
 
-        for (let i = 0; i < line.length; i += 1) {
-            const char = line[i];
+        for (let i = 0; i < csvText.length; i += 1) {
+            const char = csvText[i];
+            const next = csvText[i + 1];
+
             if (char === '"') {
-                inQuotes = !inQuotes;
+                if (inQuotes && next === '"') {
+                    cell += '"';
+                    i += 1;
+                } else {
+                    inQuotes = !inQuotes;
+                }
             } else if (char === ',' && !inQuotes) {
-                result.push(current);
-                current = '';
+                row.push(cell);
+                cell = '';
+            } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                if (char === '\r' && next === '\n') i += 1;
+                row.push(cell);
+                rows.push(row);
+                row = [];
+                cell = '';
             } else {
-                current += char;
+                cell += char;
             }
         }
 
-        result.push(current);
-        return result;
+        row.push(cell);
+        rows.push(row);
+        return rows.filter(csvRow => csvRow.some(value => clean(value)));
+    }
+
+    function buildHeaderIndex(headers) {
+        const normalizedHeaders = headers.map(normalizeHeader);
+        const find = (...names) => {
+            const targets = names.map(normalizeHeader);
+            return normalizedHeaders.findIndex(header => targets.includes(header));
+        };
+        const findLast = (...names) => {
+            const targets = names.map(normalizeHeader);
+            for (let i = normalizedHeaders.length - 1; i >= 0; i -= 1) {
+                if (targets.includes(normalizedHeaders[i])) return i;
+            }
+            return -1;
+        };
+
+        return {
+            detail: find('DETALLE', 'PRODUCTO', 'NOMBRE'),
+            brand: find('MARCA'),
+            acquisition: find('ADQUISICION'),
+            pvp: findLast('PVP'),
+            pvpExact: find('P.V.P.'),
+            suggestedPrice: find('PVP SUG UNI'),
+            provider: find('PROVEEDOR'),
+            purchaseDate: find('FECHA DE COMPRA')
+        };
     }
 
     function parseCSV(csvText) {
-        return csvText
-            .split('\n')
-            .filter(line => line.trim())
+        const rows = parseCSVRows(csvText);
+        if (rows.length < 2) return [];
+
+        const index = buildHeaderIndex(rows[0]);
+
+        return rows
             .slice(1)
-            .map((line, index) => {
-                const cols = parseCSVLine(line);
-                const name = clean(cols[0]);
-                const price = Number.parseFloat(clean(cols[3]));
+            .map((cols, rowIndex) => {
+                const name = clean(cols[index.detail]);
+                const price = parseMoney(cols[index.pvp]) || parseMoney(cols[index.pvpExact]) || parseMoney(cols[index.suggestedPrice]);
 
-                if (!name || Number.isNaN(price) || price <= 0) return null;
+                if (!name || !price) return null;
 
-                const stockValue = Number.parseInt(clean(cols[6]), 10);
+                const stockValue = Number.parseInt(clean(cols[index.acquisition]), 10);
+                const category = inferCategory(name);
+                const provider = clean(cols[index.provider]);
+                const purchaseDate = clean(cols[index.purchaseDate]);
 
                 return {
-                    id: `sheet-${index + 1}`,
+                    id: `sheet-${rowIndex + 1}`,
                     name,
-                    category: normalizeCategory(cols[1]),
-                    brand: clean(cols[2]) || 'Sin marca',
+                    category,
+                    brand: clean(cols[index.brand]) || provider || 'Sin marca',
                     price,
-                    oldPrice: Number.parseFloat(clean(cols[4])) || null,
-                    description: clean(cols[5]) || 'Producto de calidad disponible en tienda.',
+                    oldPrice: null,
+                    description: purchaseDate
+                        ? `Producto de papelería disponible. Última referencia de compra: ${purchaseDate}.`
+                        : 'Producto de papelería disponible para consultar en tienda.',
                     stock: Number.isNaN(stockValue) ? 1 : Math.max(stockValue, 0),
-                    popular: clean(cols[7]).toLowerCase() === 'si',
-                    image: clean(cols[8])
+                    popular: rowIndex < 24,
+                    image: categoryImage(category)
                 };
             })
             .filter(Boolean);
@@ -139,7 +222,7 @@
     }
 
     function validImage(src) {
-        return /^https?:\/\//.test(src) || /^images\//.test(src) || /^\.\.\/images\//.test(src);
+        return /^https?:\/\//.test(src) || /^images\//.test(src) || /^uploads\//.test(src) || /^\.\.\/images\//.test(src);
     }
 
     async function loadData() {
@@ -147,24 +230,58 @@
         setStatus('Cargando catálogo actualizado...');
 
         try {
-            const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
+            const response = await fetch(`/api/products?t=${Date.now()}`, {
+                headers: { Accept: 'application/json' }
+            });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-            const csvText = await response.text();
-            const products = parseCSV(csvText);
-            if (!products.length) throw new Error('La hoja no devolvió productos válidos.');
+            const data = await response.json();
+            const products = Array.isArray(data.products) ? data.products.map(normalizeApiProduct).filter(Boolean) : [];
+            if (!products.length) throw new Error('El admin no devolvió productos activos.');
 
             state.allProducts = products;
-            setStatus('Catálogo actualizado desde inventario.');
-        } catch (error) {
-            state.allProducts = fallbackProducts;
-            setStatus('Mostrando productos provisionales. Revisa la conexión con inventario.');
-            console.warn('No se pudo cargar Google Sheets:', error);
+            setStatus('Catálogo actualizado desde el panel admin.');
+        } catch (adminError) {
+            try {
+                const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const csvText = await response.text();
+                const products = parseCSV(csvText);
+                if (!products.length) throw new Error('La hoja no devolvió productos válidos.');
+
+                state.allProducts = products;
+                setStatus('Catálogo actualizado desde inventario.');
+            } catch (sheetError) {
+                state.allProducts = fallbackProducts;
+                setStatus('Mostrando productos provisionales. Revisa la conexión con inventario.');
+                console.warn('No se pudo cargar el admin:', adminError);
+                console.warn('No se pudo cargar Google Sheets:', sheetError);
+            }
         }
 
         hydrateCategories();
         applyFilters();
         setLoading(false);
+    }
+
+    function normalizeApiProduct(product) {
+        const name = clean(product.name);
+        const price = Number(product.price);
+        if (!name || !Number.isFinite(price)) return null;
+
+        return {
+            id: clean(product.id) || name,
+            name,
+            category: normalizeCategory(product.category),
+            brand: clean(product.brand) || 'De Colores',
+            price,
+            oldPrice: product.oldPrice == null ? null : Number(product.oldPrice),
+            description: clean(product.description) || 'Producto disponible para consultar en tienda.',
+            stock: Number.parseInt(product.stock || 0, 10),
+            popular: Boolean(product.popular),
+            image: clean(product.image) || categoryImage(normalizeCategory(product.category))
+        };
     }
 
     function hydrateCategories() {
@@ -326,9 +443,11 @@
     function createProductCard(product) {
         const card = document.createElement('article');
         card.className = 'catalog-card';
+        card.dataset.category = product.category;
 
         const imageWrap = document.createElement('div');
         imageWrap.className = 'catalog-card__image';
+        imageWrap.dataset.category = product.category;
 
         const src = validImage(product.image) ? product.image : categoryImage(product.category);
         const image = document.createElement('img');

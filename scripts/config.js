@@ -67,6 +67,20 @@
                 icon: 'IM'
             },
             {
+                id: 'papeleria',
+                name: 'Papelería',
+                description: 'Papeles, etiquetas, sobres y materiales de uso diario.',
+                image: asset('images/materiales/papel bond.png'),
+                icon: 'PA'
+            },
+            {
+                id: 'regalos',
+                name: 'Regalos',
+                description: 'Empaques, decoración y detalles para ocasiones especiales.',
+                image: asset('images/materiales/cartuchera.jpg'),
+                icon: 'RG'
+            },
+            {
                 id: 'accesorios',
                 name: 'Accesorios',
                 description: 'Detalles útiles para estudiar, regalar y organizar.',

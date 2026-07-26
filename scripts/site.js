@@ -291,6 +291,8 @@
     }
 
     function enhanceProductNavigation() {
+        if (document.body.classList.contains('home-page')) return;
+
         const menu = document.querySelector('.nav-menu');
         const productLink = [...document.querySelectorAll('.nav-menu a')].find(link => {
             const text = link.textContent.trim().toLowerCase();
@@ -444,6 +446,440 @@
         }
     }
 
+    function initFlowHero() {
+        const hero = document.querySelector('.fluid-hero');
+        if (!hero) return;
+
+        const headerNode = document.querySelector('.home-page .header');
+        const footerNode = document.querySelector('.home-page .footer');
+        const badge = hero.querySelector('[data-hero-reveal="badge"]');
+        const heading = hero.querySelector('[data-word-reveal="heading"]');
+        const subline = hero.querySelector('[data-word-reveal="subline"]');
+        const actions = hero.querySelector('.hero-actions');
+        const formWrap = hero.querySelector('[data-hero-reveal="form"]');
+        const waitlistForm = hero.querySelector('.fluid-hero__waitlist');
+        const canvas = hero.querySelector('canvas');
+
+        function splitWords(element, baseDelay, stagger, duration, y) {
+            if (!element || element.dataset.wordsReady) return;
+            const words = element.textContent.trim().split(/\s+/);
+            element.textContent = '';
+            words.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.className = 'word';
+                span.textContent = word;
+                span.style.setProperty('--word-delay', `${baseDelay + index * stagger}ms`);
+                span.style.setProperty('--word-duration', `${duration}ms`);
+                span.style.setProperty('--word-y', `${y}px`);
+                element.appendChild(span);
+                if (index < words.length - 1) element.appendChild(document.createTextNode(' '));
+            });
+            element.dataset.wordsReady = 'true';
+        }
+
+        splitWords(heading, 480, 85, 720, 26);
+        splitWords(subline, 1150, 22, 600, 14);
+
+        window.setTimeout(() => headerNode?.classList.add('is-hero-visible'), 150);
+        window.setTimeout(() => badge?.classList.add('is-visible'), 320);
+        window.setTimeout(() => heading?.classList.add('is-visible'), 480);
+        window.setTimeout(() => subline?.classList.add('is-visible'), 1150);
+        window.setTimeout(() => actions?.classList.add('is-visible'), 1320);
+        window.setTimeout(() => formWrap?.classList.add('is-visible'), 1450);
+        window.setTimeout(() => footerNode?.classList.add('is-hero-visible'), 1650);
+
+        waitlistForm?.addEventListener('submit', event => {
+            event.preventDefault();
+            showCartToast('Gracias. Te avisaremos cuando haya novedades.');
+            waitlistForm.reset();
+        });
+
+        if (canvas) window.setTimeout(() => fluidFallback(canvas), 220);
+    }
+
+    function fluidSimulation(canvas) {
+        const gl = canvas.getContext('webgl', {
+            alpha: true,
+            depth: false,
+            stencil: false,
+            antialias: true,
+            preserveDrawingBuffer: false
+        });
+
+        if (!gl) {
+            fluidFallback(canvas);
+            return;
+        }
+
+        const MAX_SPLATS = 42;
+        const pointer = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, moved: false, seeded: false };
+        const splats = [];
+        let start = performance.now();
+        let orbitAngle = 0;
+        let virtualSeeded = false;
+        let virtualPrevX = 0.5;
+        let virtualPrevY = 0.5;
+        let lastVirtualColor = 0;
+        let virtualColor = [0.05, 0.75, 1.0];
+        let rafId = 0;
+
+        const vertexShader = compile(gl.VERTEX_SHADER, `
+            attribute vec2 aPosition;
+            varying vec2 vUv;
+            void main() {
+                vUv = aPosition * 0.5 + 0.5;
+                gl_Position = vec4(aPosition, 0.0, 1.0);
+            }
+        `);
+
+        const fragmentShader = compile(gl.FRAGMENT_SHADER, `
+            precision highp float;
+            varying vec2 vUv;
+            uniform vec2 uResolution;
+            uniform float uTime;
+            uniform int uCount;
+            uniform vec4 uSplats[${MAX_SPLATS}];
+            uniform vec3 uColors[${MAX_SPLATS}];
+
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                return mix(
+                    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                    u.y
+                );
+            }
+
+            float fbm(vec2 p) {
+                float v = 0.0;
+                float a = 0.5;
+                for (int i = 0; i < 5; i++) {
+                    v += a * noise(p);
+                    p = mat2(1.6, 1.2, -1.2, 1.6) * p + 0.17;
+                    a *= 0.5;
+                }
+                return v;
+            }
+
+            void main() {
+                vec2 uv = vUv;
+                vec2 centred = uv - 0.5;
+                centred.x *= uResolution.x / uResolution.y;
+
+                float baseMist = fbm(uv * 2.4 + vec2(uTime * 0.018, -uTime * 0.012));
+                vec3 color = vec3(0.015, 0.019, 0.045) + vec3(0.015, 0.025, 0.06) * baseMist;
+
+                for (int i = 0; i < ${MAX_SPLATS}; i++) {
+                    if (i >= uCount) break;
+                    vec4 s = uSplats[i];
+                    vec2 p = uv - s.xy;
+                    p.x *= uResolution.x / uResolution.y;
+                    float age = clamp(s.z, 0.0, 1.0);
+                    float radius = mix(0.026, 0.19, age) * s.w;
+                    float core = exp(-dot(p, p) / max(radius * radius, 0.00008));
+                    float ring = exp(-dot(p, p) / max(radius * radius * 6.2, 0.00008));
+                    float marble = fbm((uv + s.xy * 2.0) * (5.0 + age * 6.0) + uTime * 0.055);
+                    vec3 ink = uColors[i] * (core * 1.65 + ring * 0.42) * (1.15 + marble * 0.6);
+                    color += ink * (1.0 - age);
+                    color += vec3(0.0, 0.08, 0.16) * ring * (1.0 - age) * 0.16;
+                }
+
+                float vignette = smoothstep(1.15, 0.08, length(centred));
+                color *= 0.66 + vignette * 0.72;
+                color = pow(color, vec3(0.86));
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            fluidFallback(canvas);
+            return;
+        }
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+
+        const locations = {
+            position: gl.getAttribLocation(program, 'aPosition'),
+            resolution: gl.getUniformLocation(program, 'uResolution'),
+            time: gl.getUniformLocation(program, 'uTime'),
+            count: gl.getUniformLocation(program, 'uCount'),
+            splats: gl.getUniformLocation(program, 'uSplats[0]'),
+            colors: gl.getUniformLocation(program, 'uColors[0]')
+        };
+
+        function compile(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+            return shader;
+        }
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+            const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+            if (canvas.width === width && canvas.height === height) return;
+            canvas.width = width;
+            canvas.height = height;
+            gl.viewport(0, 0, width, height);
+        }
+
+        function generateColor() {
+            const h = 0.5 + Math.random() * 0.42;
+            return hsvToRgb(h, 0.95, 1.0).map(value => value * 0.92);
+        }
+
+        function hsvToRgb(h, s, v) {
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: return [v, t, p];
+                case 1: return [q, v, p];
+                case 2: return [p, v, t];
+                case 3: return [p, q, v];
+                case 4: return [t, p, v];
+                default: return [v, p, q];
+            }
+        }
+
+        function addSplat(x, y, color, size = 1) {
+            splats.unshift({
+                x,
+                y,
+                age: 0,
+                size,
+                vx: (Math.random() - 0.5) * 0.004,
+                vy: (Math.random() - 0.5) * 0.004,
+                color
+            });
+            if (splats.length > MAX_SPLATS) splats.length = MAX_SPLATS;
+        }
+
+        function multipleSplats(amount) {
+            for (let i = 0; i < amount; i += 1) {
+                const color = generateColor().map(value => value * 3.2);
+                addSplat(Math.random(), Math.random(), color, 0.86 + Math.random() * 1.35);
+            }
+        }
+
+        function pointerPos(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left) / rect.width,
+                y: 1 - ((clientY - rect.top) / rect.height)
+            };
+        }
+
+        function stir(clientX, clientY) {
+            const pos = pointerPos(clientX, clientY);
+            if (!pointer.seeded) {
+                pointer.seeded = true;
+                pointer.x = pos.x;
+                pointer.y = pos.y;
+                pointer.px = pos.x;
+                pointer.py = pos.y;
+                return;
+            }
+            const speed = Math.hypot(pos.x - pointer.x, pos.y - pointer.y);
+            pointer.px = pointer.x;
+            pointer.py = pointer.y;
+            pointer.x = pos.x;
+            pointer.y = pos.y;
+            if (speed > 0.001) addSplat(pos.x, pos.y, generateColor().map(value => value * 2.6), 0.8 + Math.min(speed * 10, 1.4));
+        }
+
+        function driveVirtualPointer(now) {
+            if (now - start < 700) return;
+            const aspect = canvas.width / Math.max(canvas.height, 1);
+            const base = Math.min(300, canvas.width * 0.35, canvas.height * 0.35);
+            const radiusX = (base / canvas.width) * (0.72 + 0.28 * Math.sin(orbitAngle * 0.37));
+            const radiusY = (base / canvas.height) * (0.72 + 0.28 * Math.sin(orbitAngle * 0.37));
+            orbitAngle += 0.026;
+            const x = 0.5 + Math.cos(orbitAngle) * radiusX;
+            const y = 0.5 + Math.sin(orbitAngle) * radiusY * aspect;
+            if (!virtualSeeded) {
+                virtualSeeded = true;
+                virtualPrevX = x;
+                virtualPrevY = y;
+                return;
+            }
+            if (now - lastVirtualColor > 120) {
+                virtualColor = generateColor().map(value => value * 3.2);
+                lastVirtualColor = now;
+            }
+            const speed = Math.hypot(x - virtualPrevX, y - virtualPrevY);
+            virtualPrevX = x;
+            virtualPrevY = y;
+            addSplat(x, y, virtualColor, 0.9 + Math.min(speed * 20, 1.3));
+        }
+
+        function render(now) {
+            resize();
+            driveVirtualPointer(now);
+
+            for (const splat of splats) {
+                splat.age += 0.0065;
+                splat.x += splat.vx + Math.sin(now * 0.001 + splat.y * 9.0) * 0.0007;
+                splat.y += splat.vy + Math.cos(now * 0.001 + splat.x * 9.0) * 0.0007;
+            }
+
+            for (let i = splats.length - 1; i >= 0; i -= 1) {
+                if (splats[i].age >= 1) splats.splice(i, 1);
+            }
+
+            const splatData = new Float32Array(MAX_SPLATS * 4);
+            const colorData = new Float32Array(MAX_SPLATS * 3);
+            splats.forEach((splat, index) => {
+                splatData[index * 4] = splat.x;
+                splatData[index * 4 + 1] = splat.y;
+                splatData[index * 4 + 2] = splat.age;
+                splatData[index * 4 + 3] = splat.size;
+                colorData[index * 3] = splat.color[0];
+                colorData[index * 3 + 1] = splat.color[1];
+                colorData[index * 3 + 2] = splat.color[2];
+            });
+
+            gl.useProgram(program);
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.enableVertexAttribArray(locations.position);
+            gl.vertexAttribPointer(locations.position, 2, gl.FLOAT, false, 0, 0);
+            gl.uniform2f(locations.resolution, canvas.width, canvas.height);
+            gl.uniform1f(locations.time, (now - start) / 1000);
+            gl.uniform1i(locations.count, splats.length);
+            gl.uniform4fv(locations.splats, splatData);
+            gl.uniform3fv(locations.colors, colorData);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            rafId = requestAnimationFrame(render);
+        }
+
+        window.addEventListener('mousemove', event => stir(event.clientX, event.clientY), { passive: true });
+        window.addEventListener('touchmove', event => {
+            for (const touch of event.targetTouches) stir(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        resize();
+        multipleSplats(34);
+        for (let i = 0; i < 8; i += 1) window.setTimeout(() => multipleSplats(10 + Math.floor(Math.random() * 10)), i * 48);
+        rafId = requestAnimationFrame(render);
+
+        window.addEventListener('pagehide', () => {
+            if (rafId) cancelAnimationFrame(rafId);
+        }, { once: true });
+    }
+
+    function fluidFallback(canvas) {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const particles = [];
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let orbit = 0;
+        let width = 0;
+        let height = 0;
+        let rafId = 0;
+        let lastFrame = 0;
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = canvas.clientWidth;
+            height = canvas.clientHeight;
+            canvas.width = Math.max(1, Math.floor(width * dpr));
+            canvas.height = Math.max(1, Math.floor(height * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function color() {
+            return `${180 + Math.random() * 150} 95% 58%`;
+        }
+
+        function add(x, y, radius = 120, force = 1) {
+            particles.unshift({
+                x,
+                y,
+                radius,
+                age: 0,
+                color: color(),
+                vx: (Math.random() - 0.5) * 0.42 * force,
+                vy: (Math.random() - 0.5) * 0.42 * force
+            });
+            if (particles.length > 30) particles.length = 30;
+        }
+
+        function paintBase() {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#04050c';
+            ctx.fillRect(0, 0, width, height);
+            const base = ctx.createRadialGradient(width * 0.22, height * 0.15, 0, width * 0.22, height * 0.15, Math.max(width, height) * 0.72);
+            base.addColorStop(0, 'rgba(45, 212, 191, 0.34)');
+            base.addColorStop(0.42, 'rgba(168, 85, 247, 0.24)');
+            base.addColorStop(1, 'rgba(4, 5, 12, 0)');
+            ctx.fillStyle = base;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function draw(now = 0) {
+            if (now - lastFrame < 33 && !reducedMotion) {
+                rafId = requestAnimationFrame(draw);
+                return;
+            }
+            lastFrame = now;
+            paintBase();
+            orbit += 0.026;
+            if (!reducedMotion) add(
+                width / 2 + Math.cos(orbit) * Math.min(220, width * 0.28),
+                height / 2 + Math.sin(orbit) * Math.min(180, height * 0.28),
+                64,
+                0.55
+            );
+            ctx.globalCompositeOperation = 'lighter';
+            particles.forEach(particle => {
+                particle.age += reducedMotion ? 0.04 : 0.018;
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                const alpha = Math.max(0, 1 - particle.age);
+                const gradient = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius * (1 + particle.age));
+                gradient.addColorStop(0, `hsl(${particle.color} / ${alpha * 0.82})`);
+                gradient.addColorStop(0.45, `hsl(${particle.color} / ${alpha * 0.22})`);
+                gradient.addColorStop(1, 'rgba(4,5,12,0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius * (1 + particle.age), 0, Math.PI * 2);
+                ctx.fill();
+            });
+            for (let i = particles.length - 1; i >= 0; i -= 1) if (particles[i].age >= 1) particles.splice(i, 1);
+            if (!reducedMotion) rafId = requestAnimationFrame(draw);
+        }
+
+        resize();
+        for (let i = 0; i < 16; i += 1) add(Math.random() * width, Math.random() * height, 70 + Math.random() * 130, 0.8);
+        window.addEventListener('resize', resize, { passive: true });
+        window.addEventListener('mousemove', event => add(event.clientX, event.clientY, 74, 1), { passive: true });
+        window.addEventListener('touchmove', event => {
+            const touch = event.targetTouches[0];
+            if (touch) add(touch.clientX, touch.clientY, 74, 1);
+        }, { passive: true });
+        draw();
+        window.addEventListener('pagehide', () => {
+            if (rafId) cancelAnimationFrame(rafId);
+        }, { once: true });
+    }
+
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', event => {
             const selector = anchor.getAttribute('href');
@@ -457,6 +893,7 @@
         });
     });
 
+    initFlowHero();
     bindHeader();
     enhanceProductNavigation();
     bindGlobalActions();

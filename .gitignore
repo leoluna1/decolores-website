@@ -1,1 +1,8 @@
-qa-artifacts/
+node_modules/
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+uploads/products/*
+!uploads/products/.gitkeep
+.env
+.DS_Store
