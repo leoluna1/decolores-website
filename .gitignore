@@ -4,5 +4,6 @@ data/*.sqlite-shm
 data/*.sqlite-wal
 uploads/products/*
 !uploads/products/.gitkeep
+qa-artifacts/
 .env
 .DS_Store

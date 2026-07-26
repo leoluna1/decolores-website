@@ -166,7 +166,12 @@ app.post('/api/uploads/products', requireAdmin, (req, res) => {
     });
 });
 
-app.use('/data', (req, res) => res.status(404).send('Not found'));
+const PRIVATE_PATH_RE = /^\/(?:server\.js|package(?:-lock)?\.json|README\.md|data\/|node_modules\/|\.env)/i;
+
+app.use((req, res, next) => {
+    if (PRIVATE_PATH_RE.test(req.path)) return res.status(404).send('Not found');
+    next();
+});
 app.use('/uploads', express.static(path.join(ROOT, 'uploads'), {
     fallthrough: false,
     setHeaders(res) {
