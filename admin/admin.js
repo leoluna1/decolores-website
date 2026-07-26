@@ -44,6 +44,8 @@ const nodes = {
     importMessage: document.querySelector('[data-import-message]'),
     imageFile: document.querySelector('[data-image-file]'),
     removeBg: document.querySelector('[data-remove-bg]'),
+    processImageUrl: document.querySelector('[data-process-image-url]'),
+    colorSwatch: document.querySelector('[data-color-swatch]'),
     imagePreview: document.querySelector('[data-image-preview]')
 };
 
@@ -145,7 +147,9 @@ function bindEvents() {
     });
 
     nodes.productForm.image.addEventListener('input', () => updateImagePreview(nodes.productForm.image.value));
+    nodes.productForm.color.addEventListener('input', () => updateColorSwatch(nodes.productForm.color.value));
     nodes.imageFile.addEventListener('change', uploadImage);
+    nodes.processImageUrl.addEventListener('click', processImageUrl);
     document.querySelector('[data-export-csv]').addEventListener('click', exportCsv);
 
     nodes.saveCsvUrl.addEventListener('click', saveCsvUrl);
@@ -444,9 +448,11 @@ function editProduct(product) {
     form.stock.value = product.stock;
     form.status.value = product.status || 'Disponible';
     form.image.value = product.image || '';
+    form.color.value = product.color || '';
     form.description.value = product.description || '';
     form.popular.checked = Boolean(product.popular);
     form.active.checked = Boolean(product.active);
+    updateColorSwatch(product.color);
     updateImagePreview(product.image);
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -464,10 +470,12 @@ function duplicateProduct(product) {
     form.stock.value = product.stock;
     form.status.value = product.status || 'Disponible';
     form.image.value = product.image || '';
+    form.color.value = product.color || '';
     form.description.value = product.description || '';
     form.popular.checked = Boolean(product.popular);
     form.active.checked = Boolean(product.active);
     nodes.imageFile.value = '';
+    updateColorSwatch(product.color);
     updateImagePreview(product.image);
     setMessage(nodes.productMessage, 'Copia preparada. Revisa el nombre y guarda para crear otro producto.');
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -495,6 +503,7 @@ function resetForm() {
     nodes.productForm.stock.value = 1;
     nodes.productForm.active.checked = true;
     nodes.imageFile.value = '';
+    updateColorSwatch('');
     updateImagePreview('');
 }
 
@@ -510,6 +519,7 @@ function formProduct() {
         stock: form.stock.value,
         status: form.status.value,
         image: form.image.value,
+        color: form.color.value,
         description: form.description.value,
         popular: form.popular.checked,
         active: form.active.checked
@@ -533,12 +543,52 @@ async function uploadImage() {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'No se pudo subir la imagen.');
         nodes.productForm.image.value = data.path;
+        if (data.dominantColor) nodes.productForm.color.value = data.dominantColor;
+        updateColorSwatch(nodes.productForm.color.value);
         updateImagePreview(data.path);
         const detail = data.backgroundRemoved ? ' Fondo blanco removido.' : '';
-        setMessage(nodes.productMessage, `Imagen subida.${detail} Guarda el producto para aplicar el cambio.`);
+        const colorDetail = data.dominantColor ? ` Color detectado: ${data.dominantColor}.` : '';
+        setMessage(nodes.productMessage, `Imagen subida.${detail}${colorDetail} Guarda el producto para aplicar el cambio.`);
     } catch (error) {
         setMessage(nodes.productMessage, error.message, true);
         nodes.imageFile.value = '';
+    }
+}
+
+async function processImageUrl() {
+    const url = nodes.productForm.image.value.trim();
+    if (!url) {
+        setMessage(nodes.productMessage, 'Pega primero un link de imagen.', true);
+        return;
+    }
+
+    if (!/^https?:\/\//i.test(url)) {
+        setMessage(nodes.productMessage, 'El link debe empezar con http:// o https://.', true);
+        return;
+    }
+
+    nodes.processImageUrl.disabled = true;
+    setMessage(nodes.productMessage, 'Procesando link de imagen...');
+
+    try {
+        const data = await api('/api/uploads/products/from-url', {
+            method: 'POST',
+            body: {
+                url,
+                removeBackground: nodes.removeBg.checked ? '1' : '0'
+            }
+        });
+        nodes.productForm.image.value = data.path;
+        if (data.dominantColor) nodes.productForm.color.value = data.dominantColor;
+        updateColorSwatch(nodes.productForm.color.value);
+        updateImagePreview(data.path);
+        const detail = data.backgroundRemoved ? ' Fondo blanco removido.' : '';
+        const colorDetail = data.dominantColor ? ` Color detectado: ${data.dominantColor}.` : '';
+        setMessage(nodes.productMessage, `Link procesado.${detail}${colorDetail} Guarda el producto para aplicar el cambio.`);
+    } catch (error) {
+        setMessage(nodes.productMessage, error.message, true);
+    } finally {
+        nodes.processImageUrl.disabled = false;
     }
 }
 
@@ -551,6 +601,13 @@ function updateImagePreview(src) {
     caption.textContent = value ? value : 'Vista previa de imagen';
 }
 
+function updateColorSwatch(value) {
+    const color = String(value || '').trim();
+    const isHex = /^#[0-9a-f]{6}$/i.test(color);
+    nodes.colorSwatch.style.background = isHex ? color : 'linear-gradient(135deg, #ef4444, #f6c343, #06b6d4)';
+    nodes.colorSwatch.title = isHex ? color : 'Sin color automatico';
+}
+
 function assetUrl(src) {
     if (/^(https?:|data:|blob:)/.test(src)) return src;
     if (src.startsWith('../')) return src;
@@ -558,7 +615,7 @@ function assetUrl(src) {
 }
 
 function exportCsv() {
-    const headers = ['id', 'name', 'category', 'brand', 'price', 'oldPrice', 'stock', 'status', 'active', 'popular', 'image', 'description'];
+    const headers = ['id', 'name', 'category', 'brand', 'price', 'oldPrice', 'stock', 'status', 'active', 'popular', 'image', 'color', 'description'];
     const rows = state.products.map(product => headers.map(header => csvCell(product[header])).join(','));
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -583,15 +640,19 @@ function parseImport(text) {
         .filter(Boolean)
         .map(line => splitCsvLine(line))
         .filter(cols => cols[0] && cols[3])
-        .map(cols => ({
-            name: cols[0],
-            category: cols[1] || 'papeleria',
-            brand: cols[2] || 'De Colores',
-            price: cols[3],
-            stock: cols[4] || 0,
-            image: cols[5] || '',
-            description: cols[6] || ''
-        }));
+        .map(cols => {
+            const hasColor = /^#[0-9a-f]{6}$/i.test(cols[6] || '');
+            return {
+                name: cols[0],
+                category: cols[1] || 'papeleria',
+                brand: cols[2] || 'De Colores',
+                price: cols[3],
+                stock: cols[4] || 0,
+                image: cols[5] || '',
+                color: hasColor ? cols[6] : '',
+                description: hasColor ? (cols[7] || '') : (cols[6] || '')
+            };
+        });
 }
 
 function splitCsvLine(line) {

@@ -280,7 +280,8 @@
             description: clean(product.description) || 'Producto disponible para consultar en tienda.',
             stock: Number.parseInt(product.stock || 0, 10),
             popular: Boolean(product.popular),
-            image: clean(product.image) || categoryImage(normalizeCategory(product.category))
+            image: clean(product.image) || categoryImage(normalizeCategory(product.category)),
+            color: validHexColor(product.color) ? product.color.toLowerCase() : ''
         };
     }
 
@@ -444,6 +445,10 @@
         const card = document.createElement('article');
         card.className = 'catalog-card';
         card.dataset.category = product.category;
+        if (validHexColor(product.color)) {
+            card.dataset.imageColor = 'true';
+            card.style.setProperty('--card-accent', product.color);
+        }
 
         const imageWrap = document.createElement('div');
         imageWrap.className = 'catalog-card__image';
@@ -525,6 +530,10 @@
         const span = document.createElement('span');
         span.textContent = text;
         return span;
+    }
+
+    function validHexColor(color) {
+        return /^#[0-9a-f]{6}$/i.test(String(color || '').trim());
     }
 
     function renderPagination(totalPages) {

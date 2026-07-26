@@ -48,6 +48,8 @@ Funciones actuales del admin:
 - Crear y editar productos.
 - Ocultar o activar productos.
 - Subir imagenes JPG, PNG, WebP o GIF hasta 3MB, con eliminacion automatica de fondo blanco para JPG, PNG y WebP.
+- Procesar links de imagen para descargarlos, quitar fondo blanco y guardar una copia local.
+- Detectar un color dominante de la imagen y usarlo como color automatico de la tarjeta en el catalogo.
 - Filtrar inventario por busqueda, categoria, activos, ocultos y bajo stock.
 - Importar productos desde CSV simple.
 - Guardar un link CSV externo y sincronizar productos desde ese link.
@@ -60,10 +62,10 @@ El cliente puede mantener los productos en Google Sheets u otro CSV publico. El 
 Columnas recomendadas:
 
 ```csv
-id,nombre,categoria,marca,precio,precio anterior,stock,imagen,descripcion,estado,destacado,activo
+id,nombre,categoria,marca,precio,precio anterior,stock,imagen,color,descripcion,estado,destacado,activo
 ```
 
-Tambien acepta nombres comunes como `producto`, `detalle`, `pvp`, `existencia`, `foto`, `visible` y `popular`.
+Tambien acepta nombres comunes como `producto`, `detalle`, `pvp`, `existencia`, `foto`, `visible`, `popular`, `accent` y `acento`.
 
 Opciones de configuracion:
 
@@ -77,6 +79,10 @@ Para Google Sheets, comparte la hoja como publica o publicada en la web. Puedes 
 ### Imagenes de productos
 
 Al subir una imagen desde el admin, la opcion `Quitar fondo blanco automaticamente al subir` viene activada. El servidor detecta el fondo blanco conectado a los bordes de la foto, lo convierte en transparencia y guarda el resultado como PNG.
+
+Si pegas un link en el campo `Imagen`, usa `Procesar link de imagen`. El servidor descarga la imagen, aplica el mismo tratamiento y reemplaza el link por una copia local en `uploads/products`.
+
+El servidor tambien extrae un color dominante de la imagen y llena `Color catalogo`. Ese color se guarda con el producto y el catalogo lo usa como acento visual de la tarjeta. Si una imagen no devuelve un color claro, el catalogo mantiene el color por categoria.
 
 Si el producto es blanco o el fondo forma parte de la foto, desactiva esa opcion antes de subirla.
 

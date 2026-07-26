@@ -22,6 +22,7 @@ const PRODUCT_CSV_SYNC_INTERVAL_MINUTES = Number(process.env.PRODUCT_CSV_SYNC_IN
 const UPLOAD_REMOVE_WHITE_BG = process.env.UPLOAD_REMOVE_WHITE_BG !== '0';
 const UPLOAD_WHITE_BG_THRESHOLD = clampNumber(process.env.UPLOAD_WHITE_BG_THRESHOLD, 220, 255, 245);
 const UPLOAD_WHITE_BG_TOLERANCE = clampNumber(process.env.UPLOAD_WHITE_BG_TOLERANCE, 0, 80, 24);
+const MAX_PRODUCT_IMAGE_BYTES = 3 * 1024 * 1024;
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -31,7 +32,7 @@ if (!process.env.ADMIN_PASSWORD) {
 
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 3 * 1024 * 1024 },
+    limits: { fileSize: MAX_PRODUCT_IMAGE_BYTES },
     fileFilter: (req, file, cb) => {
         if (!safeImageExtension(file)) return cb(new Error('Solo se permiten imagenes JPG, PNG, WebP o GIF.'));
         cb(null, true);
@@ -50,6 +51,7 @@ db.exec(`
         description TEXT NOT NULL DEFAULT '',
         stock INTEGER NOT NULL DEFAULT 0,
         image TEXT NOT NULL DEFAULT '',
+        color TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT 'Disponible',
         popular INTEGER NOT NULL DEFAULT 0,
         active INTEGER NOT NULL DEFAULT 1,
@@ -63,6 +65,7 @@ db.exec(`
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `);
+ensureProductColumn('color', "ALTER TABLE products ADD COLUMN color TEXT NOT NULL DEFAULT ''");
 
 const count = db.prepare('SELECT COUNT(*) AS total FROM products').get().total;
 if (count === 0) seedProducts();
@@ -186,6 +189,18 @@ app.post('/api/uploads/products', requireAdmin, (req, res) => {
     });
 });
 
+app.post('/api/uploads/products/from-url', requireAdmin, async (req, res) => {
+    try {
+        const file = await downloadRemoteProductImage(req.body.url);
+        const result = await saveUploadedProductImage(file, {
+            removeWhiteBackground: UPLOAD_REMOVE_WHITE_BG && req.body.removeBackground !== '0'
+        });
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
 const PRIVATE_PATH_RE = /^\/(?:server\.js|package(?:-lock)?\.json|README\.md|data\/|node_modules\/|\.env)/i;
 
 app.use((req, res, next) => {
@@ -257,6 +272,11 @@ function parseCookies(header) {
     }));
 }
 
+function ensureProductColumn(name, sql) {
+    const columns = db.prepare('PRAGMA table_info(products)').all().map(column => column.name);
+    if (!columns.includes(name)) db.exec(sql);
+}
+
 function listProducts({ includeInactive = false } = {}) {
     const sql = includeInactive
         ? 'SELECT * FROM products ORDER BY updated_at DESC, name ASC'
@@ -273,9 +293,9 @@ function getProduct(id, includeInactive = false) {
 
 function insertProduct(product) {
     db.prepare(`
-        INSERT INTO products (id, name, category, brand, price, old_price, description, stock, image, status, popular, active)
-        VALUES (@id, @name, @category, @brand, @price, @oldPrice, @description, @stock, @image, @status, @popular, @active)
-    `).run(product);
+        INSERT INTO products (id, name, category, brand, price, old_price, description, stock, image, color, status, popular, active)
+        VALUES (@id, @name, @category, @brand, @price, @oldPrice, @description, @stock, @image, @color, @status, @popular, @active)
+    `).run({ color: '', ...product });
 }
 
 function updateProduct(product) {
@@ -289,6 +309,7 @@ function updateProduct(product) {
             description = @description,
             stock = @stock,
             image = @image,
+            color = @color,
             status = @status,
             popular = @popular,
             active = @active,
@@ -424,6 +445,7 @@ function buildCsvHeader(firstRow) {
         oldPrice: find('precio anterior', 'precio_anterior', 'oldprice', 'old price'),
         stock: find('stock', 'existencia', 'inventario', 'cantidad', 'adquisicion', 'adquisición'),
         image: find('imagen', 'foto', 'image', 'url imagen', 'url_imagen'),
+        color: find('color', 'color catalogo', 'color catálogo', 'accent', 'acento'),
         description: find('descripcion', 'descripción', 'resumen'),
         status: find('estado', 'status'),
         popular: find('destacado', 'popular'),
@@ -443,6 +465,7 @@ function buildCsvHeader(firstRow) {
             stock: 4,
             image: 5,
             description: 6,
+            color: -1,
             id: -1,
             oldPrice: -1,
             status: -1,
@@ -470,6 +493,7 @@ function csvRowToProduct(cols, index, rowIndex) {
         oldPrice: parseCsvNumber(get('oldPrice')),
         stock: stock == null ? 1 : stock,
         image: clean(get('image'), 220) || categoryImage(category),
+        color: normalizeHexColor(get('color')),
         description: clean(get('description'), 280) || 'Producto disponible para consultar en tienda.',
         status: clean(get('status'), 40) || (stock === 0 ? 'Agotado' : 'Disponible'),
         popular: get('popular') ? truthy(get('popular')) : rowIndex < 12,
@@ -607,6 +631,7 @@ function normalizeProduct(input) {
         description: clean(input.description, 280) || 'Producto disponible para consultar en tienda.',
         stock: Number.isFinite(stock) ? stock : 0,
         image: clean(input.image, 220) || categoryImage(normalizeCategory(input.category)),
+        color: normalizeHexColor(input.color),
         status: clean(input.status, 40) || (stock > 0 ? 'Disponible' : 'Agotado'),
         popular: truthy(input.popular) ? 1 : 0,
         active: input.active === undefined ? 1 : (truthy(input.active) ? 1 : 0)
@@ -624,6 +649,7 @@ function toClientProduct(row) {
         description: row.description,
         stock: Number(row.stock),
         image: row.image,
+        color: row.color || '',
         status: row.status,
         popular: Boolean(row.popular),
         active: Boolean(row.active),
@@ -634,6 +660,11 @@ function toClientProduct(row) {
 
 function clean(value, max = 280) {
     return String(value || '').replace(/[<>]/g, '').trim().slice(0, max);
+}
+
+function normalizeHexColor(value) {
+    const color = clean(value, 7).toLowerCase();
+    return /^#[0-9a-f]{6}$/.test(color) ? color : '';
 }
 
 function normalizeCategory(value) {
@@ -708,6 +739,7 @@ async function saveUploadedProductImage(file, options = {}) {
         }
     }
 
+    const dominantColor = await extractDominantImageColor(buffer);
     const filename = `${Date.now()}-${crypto.randomUUID()}${extension}`;
     await fs.promises.writeFile(path.join(UPLOAD_DIR, filename), buffer);
 
@@ -716,8 +748,161 @@ async function saveUploadedProductImage(file, options = {}) {
         filename,
         size: buffer.length,
         backgroundRemoved,
-        removedPixels
+        removedPixels,
+        dominantColor
     };
+}
+
+async function extractDominantImageColor(inputBuffer) {
+    try {
+        const { data, info } = await sharp(inputBuffer, { limitInputPixels: 25000000 })
+            .rotate()
+            .resize(72, 72, { fit: 'inside', withoutEnlargement: true })
+            .ensureAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+
+        const buckets = new Map();
+        for (let pixel = 0; pixel < info.width * info.height; pixel += 1) {
+            const offset = pixel * info.channels;
+            const alpha = data[offset + 3];
+            if (alpha < 48) continue;
+
+            const red = data[offset];
+            const green = data[offset + 1];
+            const blue = data[offset + 2];
+            const max = Math.max(red, green, blue);
+            const min = Math.min(red, green, blue);
+            const saturation = max === 0 ? 0 : (max - min) / max;
+            const lightness = (max + min) / 510;
+
+            if (red > 235 && green > 235 && blue > 235 && max - min < 24) continue;
+            if (lightness > 0.92 && saturation < 0.18) continue;
+
+            const key = `${Math.round(red / 28)}-${Math.round(green / 28)}-${Math.round(blue / 28)}`;
+            const weight = 1 + saturation * 3 + (1 - Math.abs(lightness - 0.52)) * 0.7;
+            const bucket = buckets.get(key) || { red: 0, green: 0, blue: 0, weight: 0 };
+            bucket.red += red * weight;
+            bucket.green += green * weight;
+            bucket.blue += blue * weight;
+            bucket.weight += weight;
+            buckets.set(key, bucket);
+        }
+
+        const dominant = [...buckets.values()].sort((a, b) => b.weight - a.weight)[0];
+        if (!dominant) return '';
+
+        return rgbToHex(
+            dominant.red / dominant.weight,
+            dominant.green / dominant.weight,
+            dominant.blue / dominant.weight
+        );
+    } catch {
+        return '';
+    }
+}
+
+function rgbToHex(red, green, blue) {
+    return `#${[red, green, blue]
+        .map(value => Math.round(value).toString(16).padStart(2, '0'))
+        .join('')}`;
+}
+
+async function downloadRemoteProductImage(rawUrl) {
+    const url = clean(rawUrl, 2000);
+    if (!isAllowedImageUrl(url)) throw new Error('Ingresa un link de imagen valido http/https.');
+
+    let response;
+    try {
+        response = await fetch(url, {
+            redirect: 'follow',
+            signal: AbortSignal.timeout(15000),
+            headers: { 'User-Agent': 'DeColoresAdmin/1.0' }
+        });
+    } catch {
+        throw new Error('No se pudo descargar la imagen del link.');
+    }
+
+    if (!response.ok) throw new Error('El link de imagen no respondio correctamente.');
+
+    const responseUrl = response.url || url;
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_PRODUCT_IMAGE_BYTES) throw new Error('La imagen del link supera 3MB.');
+
+    const contentType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    const mimetype = imageMimeFromContentType(contentType) || imageMimeFromUrl(responseUrl) || imageMimeFromUrl(url);
+    if (!mimetype) throw new Error('El link debe apuntar a una imagen JPG, PNG, WebP o GIF.');
+
+    const buffer = await readImageResponseBuffer(response);
+    const originalname = imageNameFromUrl(responseUrl, mimetype);
+    return { buffer, mimetype, originalname };
+}
+
+async function readImageResponseBuffer(response) {
+    if (!response.body?.getReader) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        if (buffer.length > MAX_PRODUCT_IMAGE_BYTES) throw new Error('La imagen del link supera 3MB.');
+        return buffer;
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > MAX_PRODUCT_IMAGE_BYTES) {
+            reader.cancel().catch(() => {});
+            throw new Error('La imagen del link supera 3MB.');
+        }
+        chunks.push(Buffer.from(value));
+    }
+
+    return Buffer.concat(chunks, total);
+}
+
+function isAllowedImageUrl(url) {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function imageMimeFromContentType(contentType) {
+    const allowed = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+    return allowed.has(contentType) ? contentType : '';
+}
+
+function imageMimeFromUrl(url) {
+    try {
+        const ext = path.extname(new URL(url).pathname).toLowerCase();
+        return new Map([
+            ['.jpg', 'image/jpeg'],
+            ['.jpeg', 'image/jpeg'],
+            ['.png', 'image/png'],
+            ['.webp', 'image/webp'],
+            ['.gif', 'image/gif']
+        ]).get(ext) || '';
+    } catch {
+        return '';
+    }
+}
+
+function imageNameFromUrl(url, mimetype) {
+    let name = '';
+    try {
+        name = path.basename(new URL(url).pathname);
+    } catch {
+        name = '';
+    }
+
+    const ext = safeImageExtension({ mimetype, originalname: name }) || safeImageExtension({ mimetype, originalname: '' });
+    if (!name || !path.extname(name)) return `remote-image${ext}`;
+    return name;
 }
 
 async function removeWhiteConnectedBackground(inputBuffer) {

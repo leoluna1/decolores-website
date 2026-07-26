@@ -343,6 +343,36 @@ textarea:focus {
     font-weight: 400;
 }
 
+.image-link-actions {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: -0.35rem;
+}
+
+.image-link-actions span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.color-control {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.color-swatch {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #ef4444, #f6c343, #06b6d4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
 .upload-toggle {
     display: inline-flex;
     align-items: center;
@@ -547,6 +577,10 @@ td small {
     }
 
     .csv-source-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .image-link-actions {
         grid-template-columns: 1fr;
     }
 
